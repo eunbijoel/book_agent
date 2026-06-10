@@ -2,6 +2,7 @@
 
 여러개의 AI 에이전트 서로 협력해서 책 한 권을 자동으로 써주는 시스템입니다.  
 **LangGraph** + **Ollama** 기반으로 동작하며, 로컬에서 실행됩니다.
+<img width="1536" height="1024" alt="Book Agent" src="https://github.com/user-attachments/assets/1ca57707-6ae5-4aab-a91c-0b75b90818ff" />
 
 ---
 
