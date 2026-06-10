@@ -1,0 +1,43 @@
+# Model configuration for agent_book_writer_v2
+# Each agent can use a different model for cost/performance optimization
+
+provider: ollama
+base_url: http://localhost:11434
+
+# Default model for all agents (override per-agent below)
+default_model: gemma3:12b
+
+# Per-agent model override (optional)
+# Use a powerful model for writing/editing, fast model for research/review
+agents:
+  planning: gemma3:12b     # needs structured JSON output + deep reasoning
+  research: gemma3:12b     # fact gathering — needs knowledge breadth
+  writing: gemma3:12b      # prose quality is critical
+  reviewer: gemma3:12b     # needs careful analysis
+  editor: gemma3:12b       # style and flow refinement
+  evaluator: gemma3:12b    # scoring — needs consistency
+
+# Ollama generation parameters
+ollama:
+  num_ctx: 8192            # context window size
+  temperature:
+    planning: 0.3
+    research: 0.2
+    writing: 0.7
+    reviewer: 0.1
+    editor: 0.4
+    evaluator: 0.1
+
+# Quality thresholds
+quality:
+  rewrite_threshold: 55    # score below this triggers full rewrite
+  revision_threshold: 70   # score below this shows revision warning
+  max_rewrites: 2          # max rewrite loops per chapter
+
+# Popular Ollama models to try:
+# - llama3.2        (3B, fast, good quality)
+# - llama3.1:8b     (8B, better quality)
+# - llama3.1:70b    (70B, excellent, needs GPU)
+# - mistral         (7B, good for writing)
+# - qwen2.5:7b      (7B, strong structured output)
+# - gemma2:9b       (9B, Google's model)

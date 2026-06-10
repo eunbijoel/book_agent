@@ -1,0 +1,28 @@
+# Book generation configuration
+
+# Output settings
+output:
+  dir: ./outputs
+  format: markdown          # markdown | pdf | both
+  save_intermediates: true  # save draft, review, evaluation JSONs
+  filename_prefix: chapter
+
+# Chapter settings
+chapter:
+  words_per_chapter: "3000-5000"
+  language: English
+  writing_guidelines:
+    - Use clear, concise language
+    - Include practical examples
+    - Define technical terms on first use
+    - End each chapter with a summary
+
+# Retry settings
+retry:
+  max_attempts: 3
+  timeout_seconds: 300      # per-agent timeout
+
+# Progress tracking
+progress:
+  resume: true              # resume from last completed chapter if interrupted
+  save_interval: 1          # save progress every N chapters
