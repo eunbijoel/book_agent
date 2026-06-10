@@ -227,8 +227,7 @@ outputs/
 ## 테스트 실행
 
 ```bash
-py -3 -m pytest tests/ -v
-```
+python3 main.py --topic "주제" --lang ko --test-mode --model qwen2.5:7b```
 
 ---
 
