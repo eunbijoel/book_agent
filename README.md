@@ -230,8 +230,18 @@ outputs/
 ## 테스트 실행
 
 ```bash
-python3 main.py --topic "주제" --lang ko --test-mode --model qwen2.5:7b```
+cd /home/eunbi/book_agent
+python3 main.py
+  --topic "주제"
+  --lang ko
+  --test-mode
+  --model qwen2.5:7b
 
+python3 main.py \
+  --toc 주제.json \
+  --model gemma4:31b \
+  --output-dir ./outputs
+```
 ---
 
 ## + Updates
@@ -242,7 +252,7 @@ python3 main.py --topic "주제" --lang ko --test-mode --model qwen2.5:7b```
 | 프레임워크   | Google ADK    | LangGraph        |
 | 에이전트 수  | 4개 (단순 순서 실행) | 6개 + 조건부 흐름      |
 | 조사 기능   | 없음            | 조사 에이전트          |
-| 품질 기준   | 없음            | 평가 에이전트 + 재작성 루프 |
+| 웹읽기   | 없음            | 오픈링크 |
 | 챕터 간 기억 | 없음            | LangGraph 상태 유지  |
 | 워크플로우   | 고정 순서         | 조건부 분기 (피드백 루프)  |
 
