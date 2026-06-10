@@ -142,6 +142,7 @@ def main() -> None:
     parser.add_argument("--config", default="configs/models.yaml", help="Model config file")
     parser.add_argument("--no-check", action="store_true", help="Skip Ollama availability check")
     parser.add_argument("--test-mode", action="store_true", help="Test mode: shorter chapters (1500-2500 words)")
+    parser.add_argument("--publish", action="store_true", help="Generate a browsable web site after book completion")
     args = parser.parse_args()
 
     if args.topic and not args.title:
@@ -216,6 +217,17 @@ def main() -> None:
     print("\nGenerated files:")
     for name, path in consolidated.items():
         print(f"  {name}: {path}")
+
+    if args.publish:
+        from workflows.web_publisher import WebPublisher
+
+        site_dir = Path(args.output_dir) / output_manager.book_slug / "site"
+        publisher = WebPublisher(site_dir)
+        publisher.publish_from_state(final_state)
+        mkdocs_yml = site_dir / "mkdocs.yml"
+        print(f"\n  Web site: {site_dir}")
+        print(f"  Preview:  mkdocs serve -f {mkdocs_yml}")
+        print(f"  Deploy:   mkdocs gh-deploy -f {mkdocs_yml} --force")
 
 
 if __name__ == "__main__":

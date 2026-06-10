@@ -21,6 +21,7 @@ class PlanningAgent:
             base_url=base_url,
             temperature=0.3,
             format="json",
+            num_ctx=8192,
         )
 
     def run(self, state: dict[str, Any]) -> dict[str, Any]:
