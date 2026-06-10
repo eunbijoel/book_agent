@@ -30,6 +30,7 @@ class BookState(TypedDict, total=False):
     # Per-chapter agent outputs
     current_research: dict[str, Any]
     current_draft: str
+    first_draft: str
     draft_word_count: int
     current_review: dict[str, Any]
     review_requires_rewrite: bool

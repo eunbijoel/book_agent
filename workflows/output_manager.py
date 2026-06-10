@@ -104,3 +104,110 @@ class OutputManager:
         )
         logger.info("Book report saved: %s", report_path)
         return report_path
+
+    def save_consolidated_outputs(self, state: dict[str, Any]) -> dict[str, Path]:
+        title = state.get("title", "Untitled")
+        completed = sorted(state.get("completed_chapters", []), key=lambda c: c["number"])
+        generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+        paths = {}
+
+        def compile_book(chapters: list, content_key: str, version_label: str) -> str:
+            lines = [f"# {title}\n", f"*{version_label} | Generated: {generated_at}*\n"]
+            lines.append(f"**Chapters: {len(chapters)}**\n")
+            lines.append("---\n")
+            for ch in chapters:
+                content = ch.get(content_key, ch.get("content", ""))
+                lines.append(f"\n## Chapter {ch['number']}: {ch['title']}\n")
+                lines.append(content)
+                lines.append("\n\n---\n")
+            return "\n".join(lines)
+
+        book_v1 = compile_book(completed, "first_draft", "V1 - First Draft")
+        paths["book_v1"] = self.base_dir / "book_v1.md"
+        paths["book_v1"].write_text(book_v1, encoding="utf-8")
+
+        book_v2 = compile_book(completed, "content", "V2 - Reviewed & Edited")
+        paths["book_v2"] = self.base_dir / "book_v2.md"
+        paths["book_v2"].write_text(book_v2, encoding="utf-8")
+
+        final_lines = [f"# {title}\n", f"*Final Version | Generated: {generated_at}*\n"]
+        final_lines.append("## Table of Contents\n")
+        for ch in completed:
+            final_lines.append(f"- Chapter {ch['number']}: {ch['title']}")
+        final_lines.append("\n---\n")
+        for ch in completed:
+            final_lines.append(f"\n## Chapter {ch['number']}: {ch['title']}\n")
+            final_lines.append(ch.get("content", ""))
+            final_lines.append("\n\n---\n")
+        paths["book_final"] = self.base_dir / "book_final.md"
+        paths["book_final"].write_text("\n".join(final_lines), encoding="utf-8")
+
+        scores = [ch.get("evaluation_score", 0) for ch in completed if ch.get("evaluation_score")]
+        avg_score = sum(scores) / len(scores) if scores else 0.0
+        total_words = sum(ch.get("word_count", 0) for ch in completed)
+        eval_lines = [f"# Evaluation Report: {title}\n", f"*Generated: {generated_at}*\n"]
+        eval_lines.append("## Summary\n")
+        eval_lines.append(f"| Metric | Value |")
+        eval_lines.append(f"|--------|-------|")
+        eval_lines.append(f"| Total Chapters | {len(completed)} |")
+        eval_lines.append(f"| Total Words | {total_words:,} |")
+        eval_lines.append(f"| Average Score | {avg_score:.1f}/100 |")
+        eval_lines.append("")
+        eval_lines.append("## Per-Chapter Scores\n")
+        eval_lines.append("| Ch | Title | Score | Words | Rewrites | Verdict |")
+        eval_lines.append("|----|-------|-------|-------|----------|---------|")
+        for ch in completed:
+            ev = ch.get("evaluation", {})
+            verdict = ev.get("verdict", "N/A")
+            eval_lines.append(
+                f"| {ch['number']} | {ch['title'][:30]} | {ch.get('evaluation_score', 0):.1f} "
+                f"| {ch.get('word_count', 0):,} | {ch.get('rewrite_count', 0)} | {verdict} |"
+            )
+        eval_lines.append("")
+        for ch in completed:
+            ev = ch.get("evaluation", {})
+            eval_lines.append(f"\n### Chapter {ch['number']}: {ch['title']}\n")
+            detailed = ev.get("detailed_feedback", {})
+            if detailed:
+                for dim, feedback in detailed.items():
+                    eval_lines.append(f"- **{dim}**: {feedback}")
+            improvements = ev.get("top_improvements", [])
+            if improvements:
+                eval_lines.append("\n**Top improvements:**")
+                for imp in improvements:
+                    eval_lines.append(f"- {imp}")
+            eval_lines.append("")
+        paths["evaluation_report"] = self.base_dir / "evaluation_report.md"
+        paths["evaluation_report"].write_text("\n".join(eval_lines), encoding="utf-8")
+
+        review_lines = [f"# Review Checklist: {title}\n", f"*Generated: {generated_at}*\n"]
+        for ch in completed:
+            rev = ch.get("review", {})
+            review_lines.append(f"\n## Chapter {ch['number']}: {ch['title']}\n")
+            assessment = rev.get("overall_assessment", "N/A")
+            review_lines.append(f"**Assessment:** {assessment}\n")
+            issues = rev.get("issues", [])
+            if issues:
+                review_lines.append("### Issues\n")
+                for i, issue in enumerate(issues, 1):
+                    severity = issue.get("severity", "minor").upper()
+                    itype = issue.get("type", "general")
+                    desc = issue.get("issue", "")
+                    fix = issue.get("fix", "")
+                    review_lines.append(f"{i}. **[{severity}]** ({itype}) {desc}")
+                    if fix:
+                        review_lines.append(f"   - Fix: {fix}")
+            else:
+                review_lines.append("No issues found.\n")
+            strengths = rev.get("strengths", [])
+            if strengths:
+                review_lines.append("\n### Strengths\n")
+                for s in strengths:
+                    review_lines.append(f"- {s}")
+            review_lines.append("")
+        paths["review_checklist"] = self.base_dir / "review_checklist.md"
+        paths["review_checklist"].write_text("\n".join(review_lines), encoding="utf-8")
+
+        for name, path in paths.items():
+            logger.info("Saved: %s", path)
+        return paths

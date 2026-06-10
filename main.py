@@ -131,19 +131,33 @@ def main() -> None:
     input_group = parser.add_mutually_exclusive_group()
     input_group.add_argument("--toc", help="Path to TOC JSON/YAML file")
     input_group.add_argument("--title", help="Book title (when not using --toc)")
+    parser.add_argument("--topic", help="Book topic (auto-generates title if --title not given)")
     parser.add_argument("--description", default="", help="Book description")
     parser.add_argument("--chapters", type=int, default=5, help="Number of chapters (when not using --toc)")
-    parser.add_argument("--model", default="gemma3:12b", help="Ollama model name")
+    parser.add_argument("--model", default="qwen2.5:7b", help="Ollama model name")
     parser.add_argument("--base-url", default="http://localhost:11434", help="Ollama base URL")
     parser.add_argument("--output-dir", default="./outputs", help="Output directory")
     parser.add_argument("--words", default="3000-5000", help="Target words per chapter")
-    parser.add_argument("--lang", default="English", help="Writing language")
+    parser.add_argument("--lang", "--language", default="English", help="Writing language (e.g. ko, English)")
     parser.add_argument("--config", default="configs/models.yaml", help="Model config file")
     parser.add_argument("--no-check", action="store_true", help="Skip Ollama availability check")
+    parser.add_argument("--test-mode", action="store_true", help="Test mode: shorter chapters (1500-2500 words)")
     args = parser.parse_args()
 
+    if args.topic and not args.title:
+        args.title = args.topic
+    if not args.description and args.topic:
+        args.description = f"A comprehensive book about {args.topic}"
+
+    LANG_MAP = {"ko": "Korean", "en": "English", "ja": "Japanese", "zh": "Chinese"}
+    args.lang = LANG_MAP.get(args.lang, args.lang)
+
+    if args.test_mode:
+        args.words = "1500-2500"
+        logger.info("Test mode: reduced word count to %s per chapter", args.words)
+
     if not args.toc and not args.title:
-        parser.error("Provide either --toc <file> or --title <title>")
+        parser.error("Provide --toc <file>, --title <title>, or --topic <topic>")
 
     setup_logging(args.output_dir)
     logger.info("agent_book_writer_v2 starting")
@@ -192,11 +206,16 @@ def main() -> None:
             output_manager.save_progress(progress)
 
     output_manager.save_book_report(final_state)
+    consolidated = output_manager.save_consolidated_outputs(final_state)
 
     elapsed = time.time() - start_time
     logger.info("Total time: %.1f minutes", elapsed / 60)
 
     print_book_summary(final_state)
+
+    print("\nGenerated files:")
+    for name, path in consolidated.items():
+        print(f"  {name}: {path}")
 
 
 if __name__ == "__main__":

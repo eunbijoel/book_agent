@@ -67,12 +67,15 @@ class WritingAgent:
         word_count = len(draft.split())
         logger.info("WritingAgent: Chapter %d draft — %d words", chapter["number"], word_count)
 
-        return {
+        result = {
             **state,
             "current_draft": draft,
             "draft_word_count": word_count,
             "rewrite_count": state.get("rewrite_count", 0),
         }
+        if state.get("rewrite_count", 0) == 0:
+            result["first_draft"] = draft
+        return result
 
     def _format_research(self, research: dict) -> str:
         if not research:
