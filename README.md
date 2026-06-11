@@ -15,6 +15,53 @@
 챕터마다 품질 점수(0~100)를 매기고, 점수가 낮으면 자동으로 다시 작성합니다.
 
 
+#### 실행구조
+
+```mermaid
+graph LR
+    subgraph INPUT["입력"]
+        TOC[tips-kazakhstan.json]
+        CLI[main.py 옵션]
+    end
+
+    subgraph BOOK["📚 책 만들기 (Book Agent)"]
+        MAIN[main.py]
+        BW[book_workflow]
+        CW[chapter_workflow]
+        AG[agents 6개]
+        OM[output_manager]
+        OLLAMA[Ollama LLM]
+    end
+
+    subgraph OUTPUT["outputs/"]
+        CH[chapter-NN.md]
+        REP[book_report.json]
+        FINAL[book_final.md]
+    end
+
+    subgraph WEB["🌐 웹 뷰어 (Web Viewer)"]
+        PW[publish_web.py]
+        WP[web_publisher.py]
+        SITE[site/ + mkdocs.yml]
+        MK[mkdocs serve / gh-deploy]
+        GHP[GitHub Pages]
+    end
+
+    TOC --> MAIN
+    CLI --> MAIN
+    MAIN --> BW --> CW --> AG --> OLLAMA
+    CW --> OM --> CH
+    OM --> REP
+    OM --> FINAL
+
+    CH --> PW
+    PW --> WP --> SITE --> MK
+    SITE --> GHP
+```
+
+
+
+#### 시스템 아키텍처
 
 ```mermaid
 graph TB
