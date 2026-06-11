@@ -3,185 +3,137 @@
 여러개의 AI 에이전트 서로 협력해서 책 한 권을 자동으로 써주는 시스템입니다.  
 **LangGraph** + **Ollama** 기반으로 동작하며, 로컬에서 실행됩니다.
 
-[TEST: 카자흐스탄 여행 가이드](https://eunbijoel.github.io/book_agent/)
+[Library: 생성된 책 모아보기](https://eunbijoel.github.io/book_agent/)
+
 
 <img width="1536" height="1024" alt="Book Agent" src="https://github.com/user-attachments/assets/1ca57707-6ae5-4aab-a91c-0b75b90818ff" />
+## 프로젝트 구조
+
+```
+book_agent/
+├── main.py                  ← CLI 진입점 (기존과 동일하게 사용 가능)
+├── publish_web.py           ← MkDocs 퍼블리셔 (선택)
+│
+├── agent/                   ← 책 생성 엔진
+│   ├── agents/              ← 6개 AI 에이전트
+│   ├── prompts/             ← 에이전트별 프롬프트
+│   ├── workflows/           ← LangGraph 워크플로 + 상태 + 출력 관리
+│   └── configs/             ← 모델·책 설정 (models.yaml 등)
+│
+├── web/                     ← 웹 관리 앱 (FastAPI)
+│   ├── app.py               ← FastAPI 앱
+│   ├── paths.py             ← 공유 경로 상수
+│   ├── routes/              ← TOC, Pipeline, Outputs, Reader 라우트
+│   ├── services/            ← Ollama 연동, 실행기, 도서관 생성, 책 스캔
+│   ├── templates/           ← Jinja2 HTML 템플릿
+│   └── static/              ← CSS, JavaScript
+│
+├── library/                 ← 정적 도서관 사이트 생성기 (GitHub Pages)
+│   ├── generator.py
+│   └── templates/           ← 도서관 랜딩 + 책 리더 HTML 템플릿
+│
+├── toc/                     ← 목차(TOC) 파일 보관
+│   ├── sample-toc.json
+│   └── tips-kazakhstan.json
+│
+├── outputs/                 ← 생성 결과물 (챕터 마크다운, 평가 JSON, 리포트)
+└── tests/
+```
 
 ---
 
-## Workflow:
+## 두 가지 사용법
 
-목차(TOC) 파일 하나를 던져주면, 에이전트들이 알아서 각 챕터를 조사하고, 쓰고, 검토하고, 다듬어서 마크다운 파일로 저장합니다.  
-챕터마다 품질 점수(0~100)를 매기고, 점수가 낮으면 자동으로 다시 작성합니다.
+### 1. 웹 UI (권장)
+
+```bash
+pip install -e ".[web]"
+uvicorn web.app:app --reload --port 8080
+```
+
+브라우저에서 `http://localhost:8080` 접속:
 
 
-#### 실행구조
+| 페이지                                   | 기능                            |
+| ------------------------------------- | ----------------------------- |
+| **Dashboard** `/`                     | TOC 수, 생성된 책 수, 실행 중 작업 현황    |
+| **TOC 관리** `/toc/`                    | 목차 생성·수정·삭제, 챕터 동적 추가/제거      |
+| **Pipeline** `/pipeline/`             | Ollama 모델 선택, TOC 선택, 책 생성 실행 |
+| **작업 로그** `/pipeline/job/{id}`        | WebSocket 실시간 로그 스트리밍         |
+| **Outputs** `/outputs/`               | 생성된 책 조회·삭제                   |
+| **Reader** `/reader/{slug}/{chapter}` | 챕터별 읽기 뷰 (이전/다음 내비게이션)        |
+
+
+### 2. CLI
+
+```bash
+# 목차 파일로 실행
+python3 main.py --toc toc/tips-kazakhstan.json --model gemma4:31b
+
+# 주제만 던져서 실행
+python3 main.py --topic "주제" --lang ko --test-mode
+
+# 백그라운드 실행
+nohup python3 main.py --toc toc/tips-kazakhstan.json --model gemma4:31b \
+  > outputs/run.log 2>&1 &
+```
+
+---
+
+## Workflow
 
 ```mermaid
 graph LR
     subgraph INPUT["입력"]
-        TOC[tips-kazakhstan.json]
-        CLI[main.py 옵션]
+        TOC["toc/*.json"]
+        WEBUI["웹 UI<br/>or CLI"]
     end
 
-    subgraph BOOK["📚 책 만들기 (Book Agent)"]
-        MAIN[main.py]
-        BW[book_workflow]
-        CW[chapter_workflow]
-        AG[agents 6개]
-        OM[output_manager]
-        OLLAMA[Ollama LLM]
+    subgraph AGENT["agent/ — 책 생성 엔진"]
+        MAIN["main.py"]
+        BW["book_workflow"]
+        CW["chapter_workflow"]
+        AG["agents 6개"]
+        OM["output_manager"]
+        OLLAMA["Ollama LLM"]
     end
 
     subgraph OUTPUT["outputs/"]
-        CH[chapter-NN.md]
-        REP[book_report.json]
-        FINAL[book_final.md]
+        CH["chapter-NN.md"]
+        REP["book_report.json"]
+        FINAL["book_final.md"]
     end
 
-    subgraph WEB["🌐 웹 뷰어 (Web Viewer)"]
-        PW[publish_web.py]
-        WP[web_publisher.py]
-        SITE[site/ + mkdocs.yml]
-        MK[mkdocs serve / gh-deploy]
-        GHP[GitHub Pages]
+    subgraph WEB["web/ — 웹 관리 앱"]
+        DASH["Dashboard"]
+        PIPE["Pipeline 실행"]
+        READ["Reader 뷰"]
+    end
+
+    subgraph LIBRARY["library/ — 정적 사이트"]
+        GEN["generator.py"]
+        GHP["GitHub Pages"]
     end
 
     TOC --> MAIN
-    CLI --> MAIN
+    WEBUI -->|subprocess| MAIN
     MAIN --> BW --> CW --> AG --> OLLAMA
     CW --> OM --> CH
     OM --> REP
     OM --> FINAL
 
-    CH --> PW
-    PW --> WP --> SITE --> MK
-    SITE --> GHP
-```
-
-
-
-#### 시스템 아키텍처
-
-```mermaid
-graph TB
-    subgraph USER["사용자 레이어"]
-        U[사용자]
-        TOC[TOC JSON 파일]
-    end
-
-    subgraph ENTRY["진입점"]
-        MAIN[main.py<br/>CLI 파서 / Ollama 체크]
-        OM[OutputManager<br/>파일 I/O]
-    end
-
-    subgraph BOOK["BookWorkflow — LangGraph"]
-        PLAN[plan 노드<br/>PlanningAgent]
-        INIT[init_chapters 노드]
-        NEXT[next_chapter 노드]
-        RUN[run_chapter 노드]
-        DONE[done 노드]
-    end
-
-    subgraph CHAPTER["ChapterWorkflow — LangGraph 서브그래프"]
-        R[research<br/>ResearchAgent]
-        W[write<br/>WritingAgent]
-        REV[review<br/>ReviewerAgent]
-        INC[increment_rewrite]
-        E[edit<br/>EditorAgent]
-        EV[evaluate<br/>EvaluatorAgent]
-        FIN[finalize]
-    end
-
-    subgraph LLM["LLM 레이어"]
-        OLLAMA[Ollama 서버<br/>localhost:11434]
-        MODEL[gemma3:12b]
-    end
-
-    subgraph OUTPUT["파일 시스템 출력"]
-        MD["chapter-NN-title.md"]
-        EVALJSON["chapter-NN-evaluation.json"]
-        REPORT["book_report.json"]
-        PROGRESS[".progress.json"]
-        LOG["book-writer.log"]
-    end
-
-    subgraph STATE["공유 상태 — BookState"]
-        BS[(BookState<br/>TypedDict)]
-    end
-
-    U -->|"--toc / --title"| MAIN
-    TOC --> MAIN
-    MAIN --> BOOK
-    MAIN --> OM
-
-    PLAN --> BS
-    R --> BS
-    W --> BS
-    REV --> BS
-    E --> BS
-    EV --> BS
-    FIN --> BS
-
-    PLAN -.->|ChatOllama| OLLAMA
-    R -.->|ChatOllama| OLLAMA
-    W -.->|ChatOllama| OLLAMA
-    REV -.->|ChatOllama| OLLAMA
-    E -.->|ChatOllama| OLLAMA
-    EV -.->|ChatOllama| OLLAMA
-    OLLAMA --> MODEL
-
-    BOOK -->|invoking| CHAPTER
-    DONE --> OM
-    OM --> MD
-    OM --> EVALJSON
-    OM --> REPORT
-    OM --> PROGRESS
-    OM --> LOG
+    CH --> READ
+    CH --> GEN --> GHP
+    PIPE -->|WebSocket 로그| MAIN
 ```
 
 
 
 ---
 
-## 에이전트 소개
+## 에이전트 구조
 
 총 6개의 에이전트가 순서대로, 그리고 서로 보완하며 동작합니다.
-
-### 1. 기획 (Planning Agent)
-
-책 전체를 설계합니다. 챕터 순서, 각 챕터의 목적, 핵심 개념, 학습 목표, 전체 톤/문체를 정의합니다.
-글을 쓰기 전에 먼저 "큰 그림"을 그리는 역할입니다.
-
-### 2. 조사 (Research Agent)
-
-챕터별로 필요한 사실, 배경 지식, 예시, 흔한 오해를 수집합니다.
-글쓰기 에이전트가 아무 근거 없이 내용을 지어내는 것(환각)을 방지하는 역할입니다.
-
-### 3. 작성 (Writing Agent)
-
-조사 결과와 기획안을 바탕으로 챕터 초고를 작성합니다.
-검토나 평가에서 재작성 요청이 오면 이 에이전트가 다시 씁니다.
-
-### 4. 검토 (Reviewer Agent)
-
-초고를 꼼꼼히 검토합니다. 확인 항목은 다음과 같습니다.
-
-- 사실 오류나 의심스러운 주장은 없는가?
-- 책 전체와 용어/논조가 일관성이 있는가?
-- 다뤄야 할 핵심 개념을 빠뜨리지 않았는가?
-- 불필요하게 반복되는 내용은 없는가?
-
-심각한 문제를 발견하면 작성 에이전트에게 재작성을 요청합니다.
-
-### 5. 편집 (Editor Agent)
-
-검토 에이전트의 피드백을 반영해 문장을 다듬습니다. 어색한 흐름, 단조로운 문체, 어렵거나 불명확한 표현을 고칩니다. 사실이나 내용을 바꾸지 않고 오직 "읽히는 글"로 만드는 역할입니다.
-
-
----
-
-## 에이전트들이 서로 보완하는 방식
 
 ```
 [기획] → 챕터 설계 전달
@@ -199,12 +151,22 @@ graph TB
        챕터 완성 → 다음 챕터로
 ```
 
-단순히 순서대로 실행하는 것이 아니라, 검토와 평가 결과에 따라 **흐름이 바뀝니다.**
-품질이 기준에 못 미치면 다시 작성 단계로 돌아가는 피드백 루프가 있습니다.
+
+| 에이전트               | 역할                         | 파일                                |
+| ------------------ | -------------------------- | --------------------------------- |
+| **기획** (Planning)  | 챕터 순서, 목적, 핵심 개념, 톤/문체 설계  | `agent/agents/planning_agent.py`  |
+| **조사** (Research)  | 챕터별 사실, 배경, 예시 수집. 환각 방지   | `agent/agents/research_agent.py`  |
+| **작성** (Writing)   | 조사 결과 + 기획안 기반 초고 작성       | `agent/agents/writing_agent.py`   |
+| **검토** (Reviewer)  | 사실 오류, 일관성, 누락, 반복 검토      | `agent/agents/reviewer_agent.py`  |
+| **편집** (Editor)    | 문장 다듬기. 사실은 안 바꾸고 가독성만 개선  | `agent/agents/editor_agent.py`    |
+| **평가** (Evaluator) | 0~100점 채점. 55점 미만 시 재작성 요청 | `agent/agents/evaluator_agent.py` |
+
 
 ---
 
 ## 목차 파일 형식 (TOC)
+
+`toc/` 디렉토리에 JSON으로 저장합니다. 웹 UI에서도 생성/수정할 수 있습니다.
 
 ```json
 {
@@ -212,7 +174,10 @@ graph TB
   "description": "책 설명",
   "language": "Korean",
   "words_per_chapter": "3000-5000",
-  "writing_guidelines": ["구체적인 예시를 포함할 것", "전문 용어는 처음 등장할 때 반드시 설명할 것"],
+  "writing_guidelines": [
+    "구체적인 예시를 포함할 것",
+    "전문 용어는 처음 등장할 때 반드시 설명할 것"
+  ],
   "chapters": [
     {
       "number": 1,
@@ -225,20 +190,23 @@ graph TB
 
 ---
 
-## 실행 옵션
+## CLI 옵션
 
 
-| 옵션              | 기본값                                              | 설명                 |
-| --------------- | ------------------------------------------------ | ------------------ |
-| `--toc`         | —                                                | 목차 JSON 파일 경로      |
-| `--title`       | —                                                | 책 제목 (--toc 대신 사용) |
-| `--description` | ""                                               | 책 설명               |
-| `--chapters`    | 5                                                | 챕터 수 (--toc 미사용 시) |
-| `--model`       | gemma3:12b                                       | Ollama 모델 이름       |
-| `--base-url`    | [http://localhost:11434](http://localhost:11434) | Ollama 서버 주소       |
-| `--output-dir`  | ./outputs                                        | 결과물 저장 폴더          |
-| `--words`       | 3000-5000                                        | 챕터당 목표 단어 수        |
-| `--lang`        | English                                          | 작성 언어              |
+| 옵션              | 기본값                                              | 설명                   |
+| --------------- | ------------------------------------------------ | -------------------- |
+| `--toc`         | —                                                | 목차 JSON 파일 경로        |
+| `--title`       | —                                                | 책 제목 (--toc 대신 사용)   |
+| `--topic`       | —                                                | 주제 (제목 자동 생성)        |
+| `--description` | ""                                               | 책 설명                 |
+| `--chapters`    | 5                                                | 챕터 수 (--toc 미사용 시)   |
+| `--model`       | gemma4:31b                                       | Ollama 모델 이름         |
+| `--base-url`    | [http://localhost:11434](http://localhost:11434) | Ollama 서버 주소         |
+| `--output-dir`  | ./outputs                                        | 결과물 저장 폴더            |
+| `--words`       | 3000-5000                                        | 챕터당 목표 단어 수          |
+| `--lang`        | ko                                               | 작성 언어                |
+| `--test-mode`   | —                                                | 짧은 챕터 (1500-2500 단어) |
+| `--publish`     | —                                                | 완료 후 MkDocs 사이트 생성   |
 
 
 ---
@@ -248,9 +216,8 @@ graph TB
 ```
 outputs/
 └── 책-제목-슬러그/
-    ├── chapter-01-챕터제목.md       ← 완성된 챕터 (마크다운)
+    ├── chapter-01-챕터제목.md       ← 완성된 챕터 (YAML frontmatter 포함)
     ├── chapter-01-evaluation.json   ← 챕터별 품질 점수 상세
-    ├── chapter-02-...md
     ├── book_report.json             ← 책 전체 품질 리포트
     ├── .progress.json               ← 진행 상황 (중단 후 재개 가능)
     └── book-writer.log              ← 실행 로그
@@ -258,34 +225,55 @@ outputs/
 
 ---
 
-## 테스트 실행
+## 도서관 (GitHub Pages)
+
+생성된 모든 책을 정적 HTML 사이트로 만들어 GitHub Pages에 배포합니다.
 
 ```bash
-cd /home/eunbi/book_agent
-python3 main.py
-  --topic "주제"
-  --lang ko
-  --test-mode
-  --model qwen2.5:7b
+# 수동 생성
+python3 library/generator.py --outputs outputs --out library_site
 
-python3 main.py \
-  --toc 주제.json \
-  --model gemma4:31b \
-  --output-dir ./outputs
+# 자동 배포: main 브랜치에 outputs/ 변경 push 시 GitHub Actions가 자동 빌드
 ```
+
+도서관 랜딩 페이지에서 모든 책이 카드 형태로 표시되고, 클릭하면 챕터별로 읽을 수 있습니다.
+
 ---
 
-## + Updates
+## 설치
+
+```bash
+# 기본 (CLI만 사용)
+pip install -e .
+
+# 웹 UI 포함
+pip install -e ".[web]"
+
+# MkDocs 퍼블리셔 포함
+pip install -e ".[publish]"
+
+# 개발 (테스트)
+pip install -e ".[dev]"
+```
+
+---
+
+## 버전 히스토리
 
 
-| 항목      | 원본 (v1)       | Current (v2)     |
-| ------- | ------------- | ---------------- |
-| 프레임워크   | Google ADK    | LangGraph        |
-| 에이전트 수  | 4개 (단순 순서 실행) | 6개 + 조건부 흐름      |
-| 조사 기능   | 없음            | 조사 에이전트          |
-| 웹읽기   | 없음            | 오픈링크 |
-| 챕터 간 기억 | 없음            | LangGraph 상태 유지  |
-| 워크플로우   | 고정 순서         | 조건부 분기 (피드백 루프)  |
+| 항목      | v1         | v2          | v3 (현재)                  |
+| ------- | ---------- | ----------- | ------------------------ |
+| 프레임워크   | Google ADK | LangGraph   | LangGraph                |
+| 에이전트 수  | 4개 (단순 순서) | 6개 + 조건부 흐름 | 6개 + 조건부 흐름              |
+| 조사 기능   | 없음         | 조사 에이전트     | 조사 에이전트                  |
+| 기본 모델   | —          | qwen2.5:7b  | gemma4:31b               |
+| 기본 언어   | English    | English     | Korean                   |
+| 웹 UI    | 없음         | 없음          | FastAPI + Jinja2         |
+| 도서관     | 없음         | MkDocs 단일 책 | 정적 HTML 멀티 책             |
+| 프로젝트 구조 | 단일 폴더      | 단일 폴더       | agent / web / library 분리 |
+| TOC 관리  | 수동 JSON 편집 | 수동 JSON 편집  | 웹 폼으로 생성/수정              |
+| 실시간 로그  | 터미널        | 터미널         | WebSocket 스트리밍           |
+| 출력물 관리  | 수동         | 수동          | 웹에서 조회/삭제                |
 
 
 ---
@@ -294,7 +282,7 @@ python3 main.py \
 
 이 프로젝트는 아래 레포지토리를 분석하고 아키텍처를 재설계하여 만들었습니다.
 
-> **prof-lijar / orchast_agent — book-writer**
+> **prof-lijar / orchast_agent — book-writer**  
 > [https://github.com/prof-lijar/orchast_agent/tree/master/book-writer](https://github.com/prof-lijar/orchast_agent/tree/master/book-writer)
 
 원본의 핵심 아이디어(Ollama 로컬 LLM + 순차 에이전트 파이프라인 + TOC 기반 챕터 생성)를 참고했으며, 아키텍처 전체는 LangGraph 기반으로 처음부터 새로 구현했습니다.
