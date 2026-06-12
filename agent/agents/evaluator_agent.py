@@ -7,13 +7,16 @@ from typing import Any
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_ollama import ChatOllama
 
-from prompts.reviewer_prompts import REVIEWER_SYSTEM, REVIEWER_USER
+from agent.prompts.evaluator_prompts import EVALUATOR_SYSTEM, EVALUATOR_USER
 
 logger = logging.getLogger(__name__)
 
+REWRITE_THRESHOLD = 55.0
+REVISION_THRESHOLD = 70.0
 
-class ReviewerAgent:
-    """Reviews draft for accuracy, consistency, completeness, and redundancy."""
+
+class EvaluatorAgent:
+    """Scores chapter quality on multiple dimensions and decides next action."""
 
     def __init__(self, model: str = "llama3.2", base_url: str = "http://localhost:11434"):
         self.llm = ChatOllama(
@@ -27,7 +30,7 @@ class ReviewerAgent:
     def run(self, state: dict[str, Any]) -> dict[str, Any]:
         chapter = state["current_chapter"]
         logger.info(
-            "ReviewerAgent: Reviewing Chapter %d: %s",
+            "EvaluatorAgent: Evaluating Chapter %d: %s",
             chapter["number"],
             chapter["title"],
         )
@@ -35,21 +38,23 @@ class ReviewerAgent:
         chapter_plan = self._find_chapter_plan(state.get("planned_chapters", []), chapter["number"])
         book_context = self._build_book_context(state)
 
-        user_prompt = REVIEWER_USER.format(
+        user_prompt = EVALUATOR_USER.format(
             book_title=state["title"],
             chapter_number=chapter["number"],
             chapter_title=chapter["title"],
             target_audience=state.get("target_audience", "General readers"),
-            key_concepts=", ".join(chapter_plan.get("key_concepts", [])) or "See chapter description",
+            tone=state.get("tone", "Informative"),
+            target_words=state.get("words_per_chapter", "3000-5000"),
             learning_objectives="\n".join(
                 f"- {obj}" for obj in chapter_plan.get("learning_objectives", [])
             ) or "Cover all key concepts",
+            key_concepts=", ".join(chapter_plan.get("key_concepts", [])) or "See chapter description",
             book_context=book_context,
-            draft=state["current_draft"],
+            chapter=state["current_draft"],
         )
 
         messages = [
-            SystemMessage(content=REVIEWER_SYSTEM),
+            SystemMessage(content=EVALUATOR_SYSTEM),
             HumanMessage(content=user_prompt),
         ]
 
@@ -59,39 +64,45 @@ class ReviewerAgent:
         try:
             data = json.loads(raw)
         except json.JSONDecodeError:
-            logger.warning("ReviewerAgent: JSON parse failed")
+            logger.warning("EvaluatorAgent: JSON parse failed")
             start = raw.find("{")
             end = raw.rfind("}") + 1
             if start >= 0 and end > start:
                 data = json.loads(raw[start:end])
             else:
-                data = {"review": {"overall_assessment": "pass", "issues": [], "requires_rewrite": False}}
+                data = {"evaluation": {"scores": {"overall": 75.0}, "verdict": "good", "requires_rewrite": False}}
 
-        review = data.get("review", data)
-        issues = review.get("issues", [])
-        critical_issues = [i for i in issues if i.get("severity") == "critical"]
+        evaluation = data.get("evaluation", data)
+        scores = evaluation.get("scores", {})
+        overall = float(scores.get("overall", 75.0))
+
+        verdict = evaluation.get("verdict", "good")
+        requires_rewrite = overall < REWRITE_THRESHOLD or evaluation.get("requires_rewrite", False)
 
         logger.info(
-            "ReviewerAgent: Chapter %d — assessment=%s, issues=%d (critical=%d)",
+            "EvaluatorAgent: Chapter %d — overall=%.1f verdict=%s rewrite=%s",
             chapter["number"],
-            review.get("overall_assessment", "unknown"),
-            len(issues),
-            len(critical_issues),
+            overall,
+            verdict,
+            requires_rewrite,
         )
 
         return {
             **state,
-            "current_review": review,
-            "review_requires_rewrite": review.get("requires_rewrite", False),
+            "current_evaluation": evaluation,
+            "evaluation_score": overall,
+            "evaluation_verdict": verdict,
+            "needs_rewrite": requires_rewrite,
         }
 
     def _build_book_context(self, state: dict) -> str:
         completed = state.get("completed_chapters", [])
         if not completed:
-            return "No previous chapters."
+            return "This is the first chapter."
         parts = []
         for ch in completed[-3:]:
-            parts.append(f"Ch{ch['number']} ({ch['title']}): key terms used — {', '.join(ch.get('key_terms', []))}")
+            score = ch.get("evaluation_score", "N/A")
+            parts.append(f"Ch{ch['number']} ({ch['title']}): score={score}")
         return "\n".join(parts)
 
     def _find_chapter_plan(self, planned_chapters: list, chapter_number: int) -> dict:

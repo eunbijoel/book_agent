@@ -6,7 +6,7 @@
 [Library: 생성된 책 모아보기](https://eunbijoel.github.io/book_agent/)
 
 
-<img width="1536" height="1024" alt="Book Agent" src="https://github.com/user-attachments/assets/1ca57707-6ae5-4aab-a91c-0b75b90818ff" />
+
 
 ## 프로젝트 구조
 

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}작업 {{ job_id }} - Book Agent{% endblock %}
+
+{% block content %}
+<hgroup>
+    <h1>작업 로그</h1>
+    <p>
+        {% if job %}
+            <mark>{{ job.status }}</mark> &mdash; {{ job.model }} &mdash; {{ job.toc_file }}
+        {% else %}
+            작업을 찾을 수 없습니다: {{ job_id }}
+        {% endif %}
+    </p>
+</hgroup>
+
+<pre id="log" class="log-container"></pre>
+
+<p id="status-msg"></p>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/log_stream.js"></script>
+<script>
+    connectLog('{{ job_id }}');
+</script>
+{% endblock %}

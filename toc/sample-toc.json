@@ -2,7 +2,7 @@
   "title": "Python for Data Scientists: A Practical Guide",
   "description": "A hands-on guide to Python programming for data scientists, covering core Python, data manipulation, visualization, and machine learning fundamentals.",
   "language": "English",
-  "words_per_chapter": "2000-3000",
+  "words_per_chapter": "500 - 1000",
   "writing_guidelines": [
     "Use concrete, real-world data science examples",
     "Include code snippets in Python",

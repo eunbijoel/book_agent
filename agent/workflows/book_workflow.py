@@ -5,9 +5,9 @@ from typing import Any, Literal
 
 from langgraph.graph import END, START, StateGraph
 
-from agents.planning_agent import PlanningAgent
-from workflows.chapter_workflow import build_chapter_workflow
-from workflows.state import BookState
+from agent.agents.planning_agent import PlanningAgent
+from agent.workflows.chapter_workflow import build_chapter_workflow
+from agent.workflows.state import BookState
 
 logger = logging.getLogger(__name__)
 
@@ -27,9 +27,31 @@ def build_book_workflow(config: dict[str, Any]) -> Any:
 
     def init_chapters_node(state: BookState) -> BookState:
         """Set up chapters from plan or TOC, initialize iteration state."""
+        toc = state.get("toc_chapters", [])
         planned = state.get("planned_chapters", [])
+
+        if toc and not planned:
+            planned = toc
+        elif toc and planned:
+            # Planning Agent가 챕터를 생성했더라도 TOC 원본의 number/title을 유지하되
+            # Planning Agent가 추가한 메타데이터(key_concepts 등)를 병합
+            merged = []
+            plan_by_num = {ch.get("number"): ch for ch in planned}
+            for toc_ch in toc:
+                num = toc_ch["number"]
+                if num in plan_by_num:
+                    merged_ch = {**plan_by_num[num], **toc_ch}
+                    for key in ("key_concepts", "learning_objectives"):
+                        if key in plan_by_num[num] and key not in toc_ch:
+                            merged_ch[key] = plan_by_num[num][key]
+                    merged.append(merged_ch)
+                else:
+                    merged.append(toc_ch)
+            planned = merged
+
         if not planned:
-            planned = state.get("toc_chapters", [])
+            logger.error("BookWorkflow: No chapters found in plan or TOC")
+            return {**state, "planned_chapters": [], "chapter_index": 0, "completed_chapters": [], "errors": ["No chapters found"]}
 
         logger.info("BookWorkflow: Starting chapter iteration — %d chapters", len(planned))
         return {
@@ -45,8 +67,14 @@ def build_book_workflow(config: dict[str, Any]) -> Any:
         idx = state.get("chapter_index", 0)
         chapters = state.get("planned_chapters", [])
 
+        if not chapters:
+            logger.error("BookWorkflow: No chapters available — skipping to done")
+            return {**state, "errors": [{"message": "No chapters to process"}]}
+
         if idx < len(chapters):
             current = chapters[idx]
+            if "number" not in current:
+                current["number"] = idx + 1
             logger.info(
                 "BookWorkflow: Starting Chapter %d/%d: %s",
                 idx + 1,
@@ -73,8 +101,10 @@ def build_book_workflow(config: dict[str, Any]) -> Any:
         return result
 
     def more_chapters(state: BookState) -> Literal["next_chapter", "done"]:
-        idx = state.get("chapter_index", 0)
         total = len(state.get("planned_chapters", []))
+        if total == 0:
+            return "done"
+        idx = state.get("chapter_index", 0)
         if idx < total:
             return "next_chapter"
         return "done"

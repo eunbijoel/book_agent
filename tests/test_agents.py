@@ -1,9 +1,4 @@
 """Basic unit tests for agent state transformations."""
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
 import pytest
 
 
@@ -38,7 +33,7 @@ BASE_STATE = {
 
 def test_evaluator_threshold():
     """Verify evaluator constants are set correctly."""
-    from agents.evaluator_agent import REWRITE_THRESHOLD, REVISION_THRESHOLD
+    from agent.agents.evaluator_agent import REWRITE_THRESHOLD, REVISION_THRESHOLD
     assert REWRITE_THRESHOLD < REVISION_THRESHOLD
     assert REWRITE_THRESHOLD == 55.0
     assert REVISION_THRESHOLD == 70.0
@@ -53,21 +48,21 @@ def test_state_has_required_fields():
 
 def test_chapter_workflow_max_rewrites():
     """Verify MAX_REWRITES constant is defined."""
-    from workflows.chapter_workflow import MAX_REWRITES
+    from agent.workflows.chapter_workflow import MAX_REWRITES
     assert MAX_REWRITES >= 1
     assert MAX_REWRITES <= 5
 
 
 def test_output_manager_creates_dir(tmp_path):
     """OutputManager should create the output directory."""
-    from workflows.output_manager import OutputManager
+    from agent.workflows.output_manager import OutputManager
     om = OutputManager(str(tmp_path), "Test Book")
     assert (tmp_path / "test-book").exists()
 
 
 def test_output_manager_save_and_load_progress(tmp_path):
     """Progress should round-trip correctly."""
-    from workflows.output_manager import OutputManager
+    from agent.workflows.output_manager import OutputManager
     om = OutputManager(str(tmp_path), "Test Book")
     progress = {"completed": [1, 2], "failed": {}, "in_progress": None}
     om.save_progress(progress)
@@ -77,7 +72,7 @@ def test_output_manager_save_and_load_progress(tmp_path):
 
 def test_output_manager_save_chapter(tmp_path):
     """Chapter markdown file should be created with front matter."""
-    from workflows.output_manager import OutputManager
+    from agent.workflows.output_manager import OutputManager
     om = OutputManager(str(tmp_path), "Test Book")
     chapter_data = {
         "number": 1,

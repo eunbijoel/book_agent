@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} - Book Agent{% endblock %}
+
+{% block head %}
+<style>
+    .reader-layout { display: flex; gap: 2rem; }
+    .chapter-nav { min-width: 220px; max-width: 260px; position: sticky; top: 1rem; align-self: flex-start; }
+    .chapter-nav ul { list-style: none; padding: 0; }
+    .chapter-nav li { margin-bottom: 0.3rem; }
+    .chapter-nav a.active { font-weight: bold; }
+    .chapter-content { flex: 1; min-width: 0; }
+    .chapter-content h1 { font-size: 1.6rem; }
+    .chapter-content h2 { font-size: 1.3rem; }
+    .chapter-content h3 { font-size: 1.1rem; }
+    @media (max-width: 768px) {
+        .reader-layout { flex-direction: column; }
+        .chapter-nav { max-width: 100%; position: static; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="reader-layout">
+    <aside class="chapter-nav">
+        <h4><a href="/reader/{{ slug }}">{{ title }}</a></h4>
+        <ul>
+            {% for ch in chapters %}
+            <li>
+                <a href="/reader/{{ slug }}/{{ ch.number }}"
+                   {% if current_chapter and current_chapter.number == ch.number %}class="active"{% endif %}>
+                    {{ ch.number }}. {{ ch.title }}
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+        <hr>
+        <a href="/outputs/">&larr; 목록으로</a>
+    </aside>
+
+    <div class="chapter-content">
+        {% if chapter_html %}
+            {{ chapter_html | safe }}
+
+            <nav style="display:flex; justify-content:space-between; margin-top:2rem;">
+                {% set prev_num = current_chapter.number - 1 %}
+                {% set next_num = current_chapter.number + 1 %}
+                {% if prev_num >= 1 %}
+                    <a href="/reader/{{ slug }}/{{ prev_num }}">&larr; 이전 챕터</a>
+                {% else %}
+                    <span></span>
+                {% endif %}
+                {% if next_num <= chapters|length %}
+                    <a href="/reader/{{ slug }}/{{ next_num }}">다음 챕터 &rarr;</a>
+                {% else %}
+                    <span></span>
+                {% endif %}
+            </nav>
+        {% elif report %}
+            <h1>{{ title }}</h1>
+            <p>
+                {{ report.get('total_chapters', 0) }}개 챕터 &middot;
+                {{ "{:,}".format(report.get('total_words', 0)) }} 단어 &middot;
+                품질 {{ "%.1f"|format(report.get('average_quality_score', 0)) }}/100
+            </p>
+            <p>왼쪽에서 챕터를 선택하세요.</p>
+        {% else %}
+            <p>책 데이터를 찾을 수 없습니다.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

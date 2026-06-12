@@ -134,12 +134,12 @@ def main() -> None:
     parser.add_argument("--topic", help="Book topic (auto-generates title if --title not given)")
     parser.add_argument("--description", default="", help="Book description")
     parser.add_argument("--chapters", type=int, default=5, help="Number of chapters (when not using --toc)")
-    parser.add_argument("--model", default="qwen2.5:7b", help="Ollama model name")
+    parser.add_argument("--model", default="gemma4:31b", help="Ollama model name")
     parser.add_argument("--base-url", default="http://localhost:11434", help="Ollama base URL")
     parser.add_argument("--output-dir", default="./outputs", help="Output directory")
     parser.add_argument("--words", default="3000-5000", help="Target words per chapter")
-    parser.add_argument("--lang", "--language", default="English", help="Writing language (e.g. ko, English)")
-    parser.add_argument("--config", default="configs/models.yaml", help="Model config file")
+    parser.add_argument("--lang", "--language", default="ko", help="Writing language (e.g. ko, English)")
+    parser.add_argument("--config", default="agent/configs/models.yaml", help="Model config file")
     parser.add_argument("--no-check", action="store_true", help="Skip Ollama availability check")
     parser.add_argument("--test-mode", action="store_true", help="Test mode: shorter chapters (1500-2500 words)")
     parser.add_argument("--publish", action="store_true", help="Generate a browsable web site after book completion")
@@ -172,8 +172,8 @@ def main() -> None:
         toc = load_toc(args.toc)
         logger.info("Loaded TOC: '%s' (%d chapters)", toc["title"], len(toc.get("chapters", [])))
 
-    from workflows.book_workflow import build_book_workflow
-    from workflows.output_manager import OutputManager
+    from agent.workflows.book_workflow import build_book_workflow
+    from agent.workflows.output_manager import OutputManager
 
     config = {
         "model": args.model,
@@ -219,7 +219,7 @@ def main() -> None:
         print(f"  {name}: {path}")
 
     if args.publish:
-        from workflows.web_publisher import WebPublisher
+        from agent.workflows.web_publisher import WebPublisher
 
         site_dir = Path(args.output_dir) / output_manager.book_slug / "site"
         publisher = WebPublisher(site_dir)

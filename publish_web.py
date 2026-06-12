@@ -42,7 +42,7 @@ def main() -> None:
 
     site_dir = Path(args.output) if args.output else book_dir / "site"
 
-    from workflows.web_publisher import WebPublisher
+    from agent.workflows.web_publisher import WebPublisher
 
     publisher = WebPublisher(site_dir)
     publisher.publish_from_files(book_dir)

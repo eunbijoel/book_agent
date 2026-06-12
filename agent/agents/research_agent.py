@@ -7,7 +7,7 @@ from typing import Any
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_ollama import ChatOllama
 
-from prompts.research_prompts import RESEARCH_SYSTEM, RESEARCH_USER
+from agent.prompts.research_prompts import RESEARCH_SYSTEM, RESEARCH_USER
 
 logger = logging.getLogger(__name__)
 

@@ -5,17 +5,17 @@ provider: ollama
 base_url: http://localhost:11434
 
 # Default model for all agents (override per-agent below)
-default_model: qwen2.5:7b
+default_model: gemma4:31b
 
 # Per-agent model override (optional)
 # Use a powerful model for writing/editing, fast model for research/review
 agents:
-  planning: qwen2.5:7b     # needs structured JSON output + deep reasoning
-  research: qwen2.5:7b     # fact gathering — needs knowledge breadth
-  writing: qwen2.5:7b      # prose quality is critical
-  reviewer: qwen2.5:7b     # needs careful analysis
-  editor: qwen2.5:7b       # style and flow refinement
-  evaluator: qwen2.5:7b    # scoring — needs consistency
+  planning: gemma4:31b     # needs structured JSON output + deep reasoning
+  research: gemma4:31b     # fact gathering — needs knowledge breadth
+  writing: gemma4:31b      # prose quality is critical
+  reviewer: gemma4:31b     # needs careful analysis
+  editor: gemma4:31b       # style and flow refinement
+  evaluator: gemma4:31b    # scoring — needs consistency
 
 # Ollama generation parameters
 ollama:

@@ -14,6 +14,9 @@ class BookState(TypedDict, total=False):
     num_chapters: int
     writing_guidelines: list[str]
 
+    # TOC input (preserved through LangGraph state)
+    toc_chapters: list[dict]
+
     # Planning agent output
     book_plan: dict[str, Any]
     planned_chapters: list[dict]

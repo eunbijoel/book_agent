@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Book Agent{% endblock %}
+
+{% block content %}
+<h1>Dashboard</h1>
+
+<div class="grid">
+    <article>
+        <header>TOC</header>
+        <p><strong>{{ toc_count }}</strong>개 목차 파일</p>
+        <footer><a href="/toc/" role="button" class="outline">관리</a></footer>
+    </article>
+    <article>
+        <header>Books</header>
+        <p><strong>{{ books|length }}</strong>권 생성 완료</p>
+        <footer><a href="/outputs/" role="button" class="outline">보기</a></footer>
+    </article>
+    <article>
+        <header>Pipeline</header>
+        <p><strong>{{ active_jobs|length }}</strong>개 실행 중</p>
+        <footer><a href="/pipeline/" role="button" class="outline">실행</a></footer>
+    </article>
+</div>
+
+{% if books %}
+<h2>최근 생성된 책</h2>
+<div class="overflow-auto">
+<table>
+    <thead>
+        <tr><th>제목</th><th>챕터</th><th>품질</th><th></th></tr>
+    </thead>
+    <tbody>
+        {% for book in books %}
+        <tr>
+            <td>{{ book.title }}</td>
+            <td>{{ book.chapters }}개</td>
+            <td>{{ "%.1f"|format(book.score) }}/100</td>
+            <td><a href="/reader/{{ book.slug }}">읽기</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endif %}
+
+{% if active_jobs %}
+<h2>실행 중인 작업</h2>
+{% for job in active_jobs %}
+<article>
+    <p>{{ job.model }} &mdash; {{ job.toc_file }}</p>
+    <a href="/pipeline/job/{{ job.id }}">로그 보기</a>
+</article>
+{% endfor %}
+{% endif %}
+{% endblock %}

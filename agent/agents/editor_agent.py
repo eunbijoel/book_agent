@@ -6,7 +6,7 @@ from typing import Any
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_ollama import ChatOllama
 
-from prompts.editor_prompts import EDITOR_SYSTEM, EDITOR_USER
+from agent.prompts.editor_prompts import EDITOR_SYSTEM, EDITOR_USER
 
 logger = logging.getLogger(__name__)
 

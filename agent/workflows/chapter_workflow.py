@@ -5,12 +5,12 @@ from typing import Any, Literal
 
 from langgraph.graph import END, START, StateGraph
 
-from agents.research_agent import ResearchAgent
-from agents.writing_agent import WritingAgent
-from agents.reviewer_agent import ReviewerAgent
-from agents.editor_agent import EditorAgent
-from agents.evaluator_agent import EvaluatorAgent
-from workflows.state import BookState
+from agent.agents.research_agent import ResearchAgent
+from agent.agents.writing_agent import WritingAgent
+from agent.agents.reviewer_agent import ReviewerAgent
+from agent.agents.editor_agent import EditorAgent
+from agent.agents.evaluator_agent import EvaluatorAgent
+from agent.workflows.state import BookState
 
 logger = logging.getLogger(__name__)
 

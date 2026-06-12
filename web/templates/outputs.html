@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Outputs - Book Agent{% endblock %}
+
+{% block content %}
+<hgroup>
+    <h1>생성된 책</h1>
+    <p>{{ books|length }}권</p>
+</hgroup>
+
+{% if books %}
+<div class="grid">
+    {% for book in books %}
+    <article>
+        <header>
+            <a href="/reader/{{ book.slug }}"><strong>{{ book.title }}</strong></a>
+        </header>
+        <p>
+            {{ book.chapters }}개 챕터 &middot;
+            {{ "{:,}".format(book.words) }} 단어 &middot;
+            품질 {{ "%.1f"|format(book.score) }}/100
+        </p>
+        {% if book.generated_at %}
+        <small>{{ book.generated_at[:10] }}</small>
+        {% endif %}
+        <footer>
+            <a href="/reader/{{ book.slug }}" role="button" class="outline">읽기</a>
+            <a href="#" role="button" class="outline secondary" onclick="deleteBook('{{ book.slug }}', '{{ book.title }}')">삭제</a>
+        </footer>
+    </article>
+    {% endfor %}
+</div>
+{% else %}
+<p>아직 생성된 책이 없습니다. <a href="/pipeline/">Pipeline</a>에서 생성하세요.</p>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function deleteBook(slug, title) {
+    if (!confirm(`"${title}" 을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`)) return;
+    await fetch(`/outputs/${slug}`, { method: 'DELETE' });
+    location.reload();
+}
+</script>
+{% endblock %}

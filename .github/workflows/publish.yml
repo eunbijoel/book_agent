@@ -1,10 +1,11 @@
-name: Publish Book to GitHub Pages
+name: Publish Library to GitHub Pages
 
 on:
   push:
     branches: [main]
     paths:
-      - "outputs/**/site/**"
+      - "outputs/**"
+      - "library/**"
 
 permissions:
   contents: read
@@ -25,18 +26,11 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install MkDocs
-        run: pip install mkdocs-material
+      - name: Install dependencies
+        run: pip install pyyaml python-slugify markdown jinja2
 
-      - name: Find mkdocs.yml and build
-        run: |
-          MKDOCS_YML=$(find outputs -name mkdocs.yml -path "*/site/*" | head -1)
-          if [ -z "$MKDOCS_YML" ]; then
-            echo "No mkdocs.yml found in outputs/*/site/"
-            exit 1
-          fi
-          echo "Building from: $MKDOCS_YML"
-          mkdocs build -f "$MKDOCS_YML" -d _site
+      - name: Generate library
+        run: python library/generator.py --outputs outputs --out _site
 
       - uses: actions/upload-pages-artifact@v3
         with:

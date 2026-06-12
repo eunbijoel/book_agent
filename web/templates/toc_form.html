@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}{% if toc %}목차 수정{% else %}새 목차{% endif %} - Book Agent{% endblock %}
+
+{% block content %}
+<h1>{% if toc %}목차 수정{% else %}새 목차 만들기{% endif %}</h1>
+
+<form method="post" action="{% if filename %}/toc/{{ filename }}{% else %}/toc/create{% endif %}">
+    <label>제목
+        <input type="text" name="title" value="{{ toc.title if toc else '' }}" required>
+    </label>
+    <label>설명
+        <textarea name="description" rows="2">{{ toc.description if toc else '' }}</textarea>
+    </label>
+
+    <div class="grid">
+        <label>언어
+            <select name="language">
+                <option value="Korean" {% if toc and toc.language == 'Korean' %}selected{% elif not toc %}selected{% endif %}>Korean</option>
+                <option value="English" {% if toc and toc.language == 'English' %}selected{% endif %}>English</option>
+                <option value="Japanese" {% if toc and toc.language == 'Japanese' %}selected{% endif %}>Japanese</option>
+            </select>
+        </label>
+        <label>챕터당 단어 수
+            <input type="text" name="words_per_chapter" value="{{ toc.words_per_chapter if toc else '3000-5000' }}">
+        </label>
+    </div>
+
+    <label>작성 가이드라인 (줄당 하나)
+        <textarea name="writing_guidelines" rows="4">{% if toc and toc.writing_guidelines %}{% for g in toc.writing_guidelines %}{{ g }}
+{% endfor %}{% endif %}</textarea>
+    </label>
+
+    <h3>챕터</h3>
+    <div id="chapters">
+        {% if toc and toc.chapters %}
+            {% for ch in toc.chapters %}
+            <fieldset data-idx="{{ loop.index0 }}">
+                <legend>챕터 {{ loop.index }} <button type="button" class="outline secondary remove-ch" onclick="removeChapter(this)">&times;</button></legend>
+                <label>제목
+                    <input type="text" name="chapter_title_{{ loop.index0 }}" value="{{ ch.title }}" required>
+                </label>
+                <label>설명
+                    <textarea name="chapter_desc_{{ loop.index0 }}" rows="2">{{ ch.description if ch.description else '' }}</textarea>
+                </label>
+            </fieldset>
+            {% endfor %}
+        {% else %}
+            <fieldset data-idx="0">
+                <legend>챕터 1 <button type="button" class="outline secondary remove-ch" onclick="removeChapter(this)">&times;</button></legend>
+                <label>제목
+                    <input type="text" name="chapter_title_0" required>
+                </label>
+                <label>설명
+                    <textarea name="chapter_desc_0" rows="2"></textarea>
+                </label>
+            </fieldset>
+        {% endif %}
+    </div>
+
+    <button type="button" class="outline" onclick="addChapter()">+ 챕터 추가</button>
+
+    <br><br>
+    <button type="submit">{% if toc %}저장{% else %}생성{% endif %}</button>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/toc_form.js"></script>
+{% endblock %}

@@ -1,0 +1,26 @@
+:root {
+    --pico-font-family: "Noto Sans KR", system-ui, sans-serif;
+}
+
+.log-container {
+    background: #1a1a2e;
+    color: #0f0;
+    padding: 1rem;
+    border-radius: 8px;
+    height: 60vh;
+    overflow-y: auto;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.remove-ch {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.8rem;
+    margin-left: 0.5rem;
+}
+
+article header {
+    font-size: 1.1rem;
+}
