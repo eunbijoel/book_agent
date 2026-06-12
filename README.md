@@ -227,17 +227,12 @@ outputs/
 
 ---
 
-## 도서관 (GitHub Pages)
-
-생성된 모든 책을 정적 HTML 사이트로 만들어 GitHub Pages에 배포합니다.
+## 도서관 및 에이전트 실행 페이지
 
 ```bash
-# 수동 생성
-python3 library/generator.py --outputs outputs --out library_site
-
-# 자동 배포: main 브랜치에 outputs/ 변경 push 시 GitHub Actions가 자동 빌드
+uvicorn web.app:app --reload --host 127.0.0.1 --port 8080
 ```
-
+Book Agent Dashboard에서 책 수정, 생성, 저장 후->
 도서관 랜딩 페이지에서 모든 책이 카드 형태로 표시되고, 클릭하면 챕터별로 읽을 수 있습니다.
 
 ---
