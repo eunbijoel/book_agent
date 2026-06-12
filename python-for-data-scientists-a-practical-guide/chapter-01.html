@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 1: Python Foundations for Data Science - Python for Data Scientists: A Practical Guide</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: "Noto Sans KR", system-ui, sans-serif; background: #fff; color: #333; }
+        .layout { display: flex; min-height: 100vh; }
+        .sidebar { width: 260px; background: #f8f9fa; border-right: 1px solid #e0e0e0; padding: 1.5rem; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+        .sidebar h3 { font-size: 1rem; margin-bottom: 1rem; }
+        .sidebar h3 a { color: #1a1a2e; text-decoration: none; }
+        .sidebar ul { list-style: none; }
+        .sidebar li { margin-bottom: 0.4rem; }
+        .sidebar a { color: #555; text-decoration: none; font-size: 0.9rem; display: block; padding: 0.3rem 0.5rem; border-radius: 4px; }
+        .sidebar a:hover { background: #e8e8e8; }
+        .sidebar a.active { background: #1a1a2e; color: #fff; }
+        .sidebar .back { margin-top: 1.5rem; font-size: 0.85rem; }
+        .content { flex: 1; padding: 2rem 3rem; max-width: 800px; }
+        .content h1 { font-size: 1.8rem; margin-bottom: 1rem; border-bottom: 2px solid #e0e0e0; padding-bottom: 0.5rem; }
+        .content h2 { font-size: 1.4rem; margin-top: 2rem; margin-bottom: 0.8rem; }
+        .content h3 { font-size: 1.15rem; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+        .content p { line-height: 1.8; margin-bottom: 1rem; }
+        .content ul, .content ol { margin: 1rem 0 1rem 2rem; line-height: 1.8; }
+        .content blockquote { border-left: 4px solid #e94560; padding-left: 1rem; margin: 1rem 0; color: #666; }
+        .content code { background: #f0f0f0; padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.9em; }
+        .content pre { background: #1a1a2e; color: #e0e0e0; padding: 1rem; border-radius: 8px; overflow-x: auto; margin: 1rem 0; }
+        .content pre code { background: none; padding: 0; }
+        .chapter-nav { display: flex; justify-content: space-between; margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #e0e0e0; }
+        .chapter-nav a { color: #1a1a2e; text-decoration: none; }
+        .chapter-nav a:hover { color: #e94560; }
+        @media (max-width: 768px) {
+            .layout { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; position: static; }
+            .content { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <nav class="sidebar">
+            <h3><a href="../index.html">Python for Data Scientists: A Practical Guide</a></h3>
+            <ul>
+                
+                <li>
+                    <a href="chapter-01.html"
+                       class="active">
+                        1. Chapter 1: Python Foundations for Data Science
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="chapter-02.html"
+                       >
+                        2. Chapter 2: Data Manipulation with Pandas
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="chapter-03.html"
+                       >
+                        3. Chapter 3: Data Visualization with Matplotlib and Seaborn
+                    </a>
+                </li>
+                
+            </ul>
+            <div class="back">
+                <a href="../index.html">&larr; 도서관으로</a>
+            </div>
+        </nav>
+
+        <article class="content">
+            <h1 id="chapter-1-python-foundations-for-data-science">Chapter 1: Python Foundations for Data Science</h1>
+<p>Welcome to your journey into the world of data science! In this chapter, we will lay down the foundational blocks necessary to build robust data analysis pipelines using Python. Whether you are a beginner or have some programming experience, this guide is designed to give you the essential skills and knowledge needed to harness Python's power for data science.</p>
+<h2 id="why-python-in-data-science">Why Python in Data Science?</h2>
+<p>Python has become the go-to language for data scientists due to its simplicity, extensive libraries, and strong community support. According to recent surveys, over 70% of data scientists use Python as their primary programming language (Kaggle, 2023). Here’s why:</p>
+<ol>
+<li><strong>Readability and Ease of Use</strong>: Python is known for its clean syntax that closely mirrors natural English, making it easier to write and understand code.</li>
+<li><strong>Rich Ecosystem of Libraries</strong>: A vast array of libraries such as NumPy, Pandas, Matplotlib, Scikit-learn, and TensorFlow provide powerful tools for data manipulation, analysis, visualization, and machine learning.</li>
+<li><strong>Community Support</strong>: The Python community is active and supportive, offering a wealth of resources through forums, documentation, and tutorials.</li>
+</ol>
+<h2 id="setting-up-your-python-environment">Setting Up Your Python Environment</h2>
+<p>Before diving into coding, you need to set up your environment. Here’s how:</p>
+<h3 id="step-1-install-python">Step 1: Install Python</h3>
+<p>Visit the official <a href="https://www.python.org/downloads/">Python website</a> and download the latest version of Python (currently 3.x series). Follow the installation instructions specific to your operating system.</p>
+<h3 id="step-2-choose-an-integrated-development-environment-ide">Step 2: Choose an Integrated Development Environment (IDE)</h3>
+<p>While you can write Python scripts in a simple text editor, using an IDE like PyCharm, VSCode with the Python extension, or Jupyter Notebook will enhance your productivity. These tools provide features such as syntax highlighting, auto-completion, and debugging.</p>
+<h3 id="step-3-install-additional-libraries">Step 3: Install Additional Libraries</h3>
+<p>You can install libraries such as Pandas, NumPy, Matplotlib, and Scikit-learn using pip (Python’s package installer). Open a terminal or command prompt and type:</p>
+<pre><code class="language-bash">pip install pandas numpy matplotlib scikit-learn
+</code></pre>
+<h2 id="basic-syntax-and-data-types-in-python">Basic Syntax and Data Types in Python</h2>
+<h3 id="variables-and-data-types">Variables and Data Types</h3>
+<p>In Python, you can declare variables without specifying their data types. Here are some common data types:</p>
+<ul>
+<li><strong>Numbers</strong>: Integers (e.g., <code>42</code>), Floats (e.g., <code>3.14</code>).</li>
+<li><strong>Strings</strong>: Text enclosed in single or double quotes (e.g., <code>"Hello"</code>, <code>'World'</code>).</li>
+<li><strong>Booleans</strong>: True and False.</li>
+</ul>
+<h4 id="example">Example</h4>
+<pre><code class="language-python">age = 25       # Integer
+height = 5.9   # Float
+name = &quot;Alice&quot; # String
+is_student = True  # Boolean
+</code></pre>
+<h3 id="collections-in-python">Collections in Python</h3>
+<p>Python supports several collection types: lists, tuples, sets, and dictionaries.</p>
+<ul>
+<li><strong>Lists</strong>: Ordered and changeable collections (e.g., <code>[1, 2, 3]</code>).</li>
+<li><strong>Tuples</strong>: Immutable ordered collections (e.g., <code>(1, 2, 3)</code>).</li>
+<li><strong>Sets</strong>: Unordered collections of unique elements (e.g., <code>{1, 2, 3}</code>).</li>
+<li><strong>Dictionaries</strong>: Key-value pairs (e.g., <code>{'name': 'Alice', 'age': 25}</code>).</li>
+</ul>
+<h4 id="example_1">Example</h4>
+<pre><code class="language-python">fruits = [&quot;apple&quot;, &quot;banana&quot;, &quot;cherry&quot;]  # List
+numbers = (1, 2, 3)                    # Tuple
+unique_numbers = {1, 2, 3}             # Set
+person_info = {&quot;name&quot;: &quot;Alice&quot;, &quot;age&quot;: 25}  # Dictionary
+</code></pre>
+<h2 id="control-structures">Control Structures</h2>
+<p>Control structures allow you to control the flow of execution in your programs. The two main types are <code>if-else</code> statements and loops.</p>
+<h3 id="if-else-statements">If-Else Statements</h3>
+<p>These allow you to execute different blocks of code based on conditions.</p>
+<h4 id="example_2">Example</h4>
+<pre><code class="language-python">age = 18
+if age &gt;= 18:
+    print(&quot;You can vote!&quot;)
+else:
+    print(&quot;You cannot vote yet.&quot;)
+</code></pre>
+<h3 id="loops">Loops</h3>
+<p>Loops are used for repeating a block of code multiple times. Python supports <code>for</code> and <code>while</code> loops.</p>
+<h4 id="example-for-loop">Example: For Loop</h4>
+<pre><code class="language-python">numbers = [1, 2, 3, 4]
+for number in numbers:
+    print(number)
+</code></pre>
+<h4 id="example-while-loop">Example: While Loop</h4>
+<pre><code class="language-python">count = 0
+while count &lt; 5:
+    print(count)
+    count += 1
+</code></pre>
+<h2 id="writing-functions">Writing Functions</h2>
+<p>Functions are reusable blocks of code that perform a specific task. Defining functions helps make your code more organized and easier to maintain.</p>
+<h3 id="defining-a-function">Defining a Function</h3>
+<p>Use the <code>def</code> keyword followed by the function name and parameters, then define the body with indented code.</p>
+<h4 id="example_3">Example</h4>
+<pre><code class="language-python">def greet(name):
+    return f&quot;Hello, {name}!&quot;
+
+print(greet(&quot;Alice&quot;))
+</code></pre>
+<h2 id="practical-exercise-data-cleaning-and-visualization">Practical Exercise: Data Cleaning and Visualization</h2>
+<p>Let's apply what we've learned to clean a dataset and visualize it using Python. We will use Pandas for data cleaning and Matplotlib for visualization.</p>
+<h3 id="step-1-load-and-clean-the-dataset">Step 1: Load and Clean the Dataset</h3>
+<p>We'll start by loading a sample CSV file into a DataFrame, then clean the data.</p>
+<pre><code class="language-python">import pandas as pd
+
+# Read CSV file
+data = pd.read_csv(&quot;sample_data.csv&quot;)
+
+# Display first few rows of the dataset
+print(data.head())
+
+# Drop missing values
+data.dropna(inplace=True)
+
+# Convert 'date' column to datetime format
+data['date'] = pd.to_datetime(data['date'])
+</code></pre>
+<h3 id="step-2-visualize-data">Step 2: Visualize Data</h3>
+<p>Now let’s plot a histogram using Matplotlib.</p>
+<pre><code class="language-python">import matplotlib.pyplot as plt
+
+# Plot histogram of the 'value' column
+plt.hist(data['value'], bins=20)
+plt.xlabel('Value')
+plt.ylabel('Frequency')
+plt.title('Histogram of Value Column')
+
+# Show the plot
+plt.show()
+</code></pre>
+<h2 id="key-takeaways-and-next-steps">Key Takeaways and Next Steps</h2>
+<ul>
+<li>Python is a versatile language with a rich ecosystem of libraries, making it a popular choice among data scientists.</li>
+<li>Setting up your environment involves downloading Python, choosing an IDE, and installing necessary libraries.</li>
+<li>Mastering basic syntax and data types in Python forms the backbone of effective programming.</li>
+<li>Control structures like <code>if-else</code> statements and loops are essential for handling conditional logic and iteration.</li>
+<li>Writing functions improves code organization and reusability.</li>
+</ul>
+<p>In the next chapter, we will dive deeper into using Pandas and NumPy to manipulate and analyze datasets. Stay tuned!</p>
+<h3 id="exercises">Exercises</h3>
+<ol>
+<li><strong>Data Cleaning Exercise</strong>: Create a script that reads a CSV file with missing values, cleans it by dropping rows with NaNs, and saves the cleaned data back to a new CSV.</li>
+<li><strong>Visualization Challenge</strong>: Write a Python function that takes in a DataFrame and a column name as arguments, then plots a histogram for that column.</li>
+</ol>
+<p>Happy coding!</p>
+<p>--- END DRAFT ---</p>
+
+            <nav class="chapter-nav">
+                
+                
+                
+                
+                
+                    
+                    
+                
+                    
+                    
+                
+                    
+                    
+                
+                
+                    <span></span>
+                
+                
+                    <a href="chapter-02.html">다음 챕터 &rarr;</a>
+                
+            </nav>
+        </article>
+    </div>
+</body>
+</html>
