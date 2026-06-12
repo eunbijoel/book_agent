@@ -7,6 +7,7 @@
 
 
 <img width="1536" height="1024" alt="Book Agent" src="https://github.com/user-attachments/assets/1ca57707-6ae5-4aab-a91c-0b75b90818ff" />
+
 ## 프로젝트 구조
 
 ```
@@ -126,7 +127,8 @@ graph LR
     CH --> GEN --> GHP
     PIPE -->|WebSocket 로그| MAIN
 ```
-
+### Book Writing Agent 실행 페이지 
+<img width="1497" height="659" alt="image" src="https://github.com/user-attachments/assets/2406c76e-75b7-4ada-a89b-cb32fe7e2ebd" />
 
 
 ---
