@@ -128,7 +128,7 @@ graph LR
     PIPE -->|WebSocket 로그| MAIN
 ```
 ### Book Writing Agent 실행 페이지 
-<img width="1497" height="659" alt="image" src="https://github.com/user-attachments/assets/2406c76e-75b7-4ada-a89b-cb32fe7e2ebd" />
+<img width="1207" height="791" alt="image" src="https://github.com/user-attachments/assets/ac1291db-901c-45f3-91ca-f9fe65b5e3e4" />
 
 
 ---
