@@ -5,9 +5,20 @@ import logging
 from typing import Any
 
 from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_ollama import ChatOllama
 
 from agent.prompts.evaluator_prompts import EVALUATOR_SYSTEM, EVALUATOR_USER
+from agent.providers.base import BaseProvider
+
+
+def _strip_markdown_fences(raw: str) -> str:
+    text = raw.strip()
+    if text.startswith("```"):
+        first_nl = text.find("\n")
+        if first_nl > 0:
+            text = text[first_nl + 1:]
+        if text.endswith("```"):
+            text = text[:-3]
+    return text.strip()
 
 logger = logging.getLogger(__name__)
 
@@ -18,14 +29,8 @@ REVISION_THRESHOLD = 70.0
 class EvaluatorAgent:
     """Scores chapter quality on multiple dimensions and decides next action."""
 
-    def __init__(self, model: str = "llama3.2", base_url: str = "http://localhost:11434"):
-        self.llm = ChatOllama(
-            model=model,
-            base_url=base_url,
-            temperature=0.1,
-            format="json",
-            num_ctx=8192,
-        )
+    def __init__(self, provider: BaseProvider):
+        self.llm = provider.get_chat_model(temperature=0.1, json_mode=True)
 
     def run(self, state: dict[str, Any]) -> dict[str, Any]:
         chapter = state["current_chapter"]
@@ -62,14 +67,19 @@ class EvaluatorAgent:
         raw = response.content
 
         try:
-            data = json.loads(raw)
+            data = json.loads(_strip_markdown_fences(raw))
         except json.JSONDecodeError:
             logger.warning("EvaluatorAgent: JSON parse failed")
-            start = raw.find("{")
-            end = raw.rfind("}") + 1
-            if start >= 0 and end > start:
-                data = json.loads(raw[start:end])
-            else:
+            try:
+                cleaned = _strip_markdown_fences(raw)
+                start = cleaned.find("{")
+                end = cleaned.rfind("}") + 1
+                if start >= 0 and end > start:
+                    data = json.loads(cleaned[start:end])
+                else:
+                    data = {"evaluation": {"scores": {"overall": 75.0}, "verdict": "good", "requires_rewrite": False}}
+            except json.JSONDecodeError:
+                logger.warning("EvaluatorAgent: JSON repair also failed, using defaults")
                 data = {"evaluation": {"scores": {"overall": 75.0}, "verdict": "good", "requires_rewrite": False}}
 
         evaluation = data.get("evaluation", data)

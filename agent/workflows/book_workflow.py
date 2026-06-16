@@ -6,6 +6,7 @@ from typing import Any, Literal
 from langgraph.graph import END, START, StateGraph
 
 from agent.agents.planning_agent import PlanningAgent
+from agent.providers.base import BaseProvider
 from agent.workflows.chapter_workflow import build_chapter_workflow
 from agent.workflows.state import BookState
 
@@ -15,10 +16,9 @@ logger = logging.getLogger(__name__)
 def build_book_workflow(config: dict[str, Any]) -> Any:
     """Build the top-level book orchestration workflow."""
 
-    model = config.get("model", "llama3.2")
-    base_url = config.get("base_url", "http://localhost:11434")
+    provider: BaseProvider = config["provider"]
 
-    planner = PlanningAgent(model=model, base_url=base_url)
+    planner = PlanningAgent(provider=provider)
     chapter_graph = build_chapter_workflow(config)
 
     def plan_node(state: BookState) -> BookState:
@@ -100,6 +100,12 @@ def build_book_workflow(config: dict[str, Any]) -> Any:
         result = chapter_graph.invoke(state)
         return result
 
+    def after_next_chapter(state: BookState) -> Literal["run_chapter", "done"]:
+        """Only proceed to run_chapter if current_chapter was actually set."""
+        if not state.get("current_chapter"):
+            return "done"
+        return "run_chapter"
+
     def more_chapters(state: BookState) -> Literal["next_chapter", "done"]:
         total = len(state.get("planned_chapters", []))
         if total == 0:
@@ -139,7 +145,11 @@ def build_book_workflow(config: dict[str, Any]) -> Any:
     graph.add_edge(START, "plan")
     graph.add_edge("plan", "init_chapters")
     graph.add_edge("init_chapters", "next_chapter")
-    graph.add_edge("next_chapter", "run_chapter")
+    graph.add_conditional_edges(
+        "next_chapter",
+        after_next_chapter,
+        {"run_chapter": "run_chapter", "done": "done"},
+    )
     graph.add_conditional_edges(
         "run_chapter",
         more_chapters,

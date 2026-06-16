@@ -4,9 +4,9 @@ import logging
 from typing import Any
 
 from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_ollama import ChatOllama
 
 from agent.prompts.editor_prompts import EDITOR_SYSTEM, EDITOR_USER
+from agent.providers.base import BaseProvider
 
 logger = logging.getLogger(__name__)
 
@@ -14,13 +14,8 @@ logger = logging.getLogger(__name__)
 class EditorAgent:
     """Polishes style, flow, and applies reviewer recommendations."""
 
-    def __init__(self, model: str = "llama3.2", base_url: str = "http://localhost:11434"):
-        self.llm = ChatOllama(
-            model=model,
-            base_url=base_url,
-            temperature=0.4,
-            num_ctx=8192,
-        )
+    def __init__(self, provider: BaseProvider):
+        self.llm = provider.get_chat_model(temperature=0.4)
 
     def run(self, state: dict[str, Any]) -> dict[str, Any]:
         chapter = state["current_chapter"]

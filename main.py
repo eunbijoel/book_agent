@@ -17,7 +17,10 @@ import time
 import urllib.request
 from pathlib import Path
 
+from dotenv import load_dotenv
 import yaml
+
+load_dotenv(Path(__file__).parent / ".env")
 
 logger = logging.getLogger("book-writer-v2")
 
@@ -125,7 +128,7 @@ def print_book_summary(final_state: dict) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Multi-Agent Book Writer v2 (LangGraph + Ollama)",
+        description="Multi-Agent Book Writer v2 (LangGraph + Multi-Provider)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     input_group = parser.add_mutually_exclusive_group()
@@ -134,13 +137,19 @@ def main() -> None:
     parser.add_argument("--topic", help="Book topic (auto-generates title if --title not given)")
     parser.add_argument("--description", default="", help="Book description")
     parser.add_argument("--chapters", type=int, default=5, help="Number of chapters (when not using --toc)")
-    parser.add_argument("--model", default="gemma4:31b", help="Ollama model name")
+    parser.add_argument("--input-url", help="Source URL(s), comma-separated")
+    parser.add_argument("--input-file", help="Source file path (PDF, TXT, MD, DOCX, CSV, XLSX)")
+    parser.add_argument("--mode", default="default", choices=["default", "data-book"],
+                        help="Generation mode (data-book for Excel/CSV analysis)")
+    parser.add_argument("--provider", default="ollama", choices=["ollama", "gemini", "claude", "openai"],
+                        help="Model provider (default: ollama)")
+    parser.add_argument("--model", default=None, help="Model name (default depends on provider)")
     parser.add_argument("--base-url", default="http://localhost:11434", help="Ollama base URL")
     parser.add_argument("--output-dir", default="./outputs", help="Output directory")
     parser.add_argument("--words", default="3000-5000", help="Target words per chapter")
     parser.add_argument("--lang", "--language", default="ko", help="Writing language (e.g. ko, English)")
     parser.add_argument("--config", default="agent/configs/models.yaml", help="Model config file")
-    parser.add_argument("--no-check", action="store_true", help="Skip Ollama availability check")
+    parser.add_argument("--no-check", action="store_true", help="Skip provider availability check")
     parser.add_argument("--test-mode", action="store_true", help="Test mode: shorter chapters (1500-2500 words)")
     parser.add_argument("--publish", action="store_true", help="Generate a browsable web site after book completion")
     args = parser.parse_args()
@@ -161,11 +170,24 @@ def main() -> None:
         parser.error("Provide --toc <file>, --title <title>, or --topic <topic>")
 
     setup_logging(args.output_dir)
-    logger.info("agent_book_writer_v2 starting")
-    logger.info("Model: %s | Output: %s", args.model, args.output_dir)
 
-    if not args.no_check and not check_ollama(args.model, args.base_url):
-        sys.exit(1)
+    from agent.providers import create_provider
+
+    DEFAULT_MODELS = {"ollama": "gemma4:31b", "gemini": "gemini-2.5-flash", "claude": "claude-sonnet-4-6", "openai": "gpt-4.1-mini"}
+    model = args.model or DEFAULT_MODELS.get(args.provider, "gemma4:31b")
+
+    provider_kwargs: dict = {"model": model}
+    if args.provider == "ollama":
+        provider_kwargs["base_url"] = args.base_url
+
+    provider = create_provider(args.provider, **provider_kwargs)
+    logger.info("agent_book_writer_v2 starting")
+    logger.info("Provider: %s | Model: %s | Output: %s", args.provider, model, args.output_dir)
+
+    if not args.no_check:
+        if not provider.validate():
+            logger.error("Provider validation failed — use --no-check to skip")
+            sys.exit(1)
 
     toc = None
     if args.toc:
@@ -176,15 +198,39 @@ def main() -> None:
     from agent.workflows.output_manager import OutputManager
 
     config = {
-        "model": args.model,
-        "base_url": args.base_url,
+        "provider": provider,
     }
 
     workflow = build_book_workflow(config)
     initial_state = build_initial_state(args, toc)
 
+    initial_state["provider_name"] = provider.provider_name
+    initial_state["model_name"] = provider.model_name
+
+    urls = [u.strip() for u in args.input_url.split(",") if u.strip()] if args.input_url else None
+    files = [args.input_file] if args.input_file else None
+
+    if urls or files:
+        from agent.inputs import extract_sources
+
+        materials, source_mode, data_summary = extract_sources(
+            urls=urls, files=files, mode=args.mode,
+        )
+        initial_state["source_materials"] = materials
+        initial_state["source_mode"] = source_mode
+        initial_state["data_summary"] = data_summary
+        logger.info("Source extraction: %d materials, mode=%s", len(materials), source_mode)
+    else:
+        initial_state["source_materials"] = []
+        initial_state["source_mode"] = "topic"
+        initial_state["data_summary"] = {}
+
     title = initial_state["title"]
-    output_manager = OutputManager(args.output_dir, title)
+    output_manager = OutputManager(
+        args.output_dir, title,
+        provider_name=provider.provider_name,
+        model_name=provider.model_name,
+    )
     progress = output_manager.load_progress()
 
     logger.info("Starting book generation: '%s'", title)

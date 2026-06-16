@@ -10,9 +10,16 @@ class BookState(TypedDict, total=False):
     title: str
     description: str
     language: str
+    provider_name: str
+    model_name: str
     words_per_chapter: str
     num_chapters: int
     writing_guidelines: list[str]
+
+    # Source materials (URL, file, data extraction)
+    source_materials: list[dict]
+    source_mode: str
+    data_summary: dict[str, Any]
 
     # TOC input (preserved through LangGraph state)
     toc_chapters: list[dict]
@@ -44,8 +51,8 @@ class BookState(TypedDict, total=False):
     needs_rewrite: bool
     rewrite_count: int
 
-    # Accumulator for completed chapters
-    completed_chapters: Annotated[list[dict], operator.add]
+    # Completed chapters — append explicitly in chapter finalize (not operator.add)
+    completed_chapters: list[dict]
 
     # Book-level output
     output_dir: str

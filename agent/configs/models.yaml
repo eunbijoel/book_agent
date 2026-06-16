@@ -1,25 +1,30 @@
 # Model configuration for agent_book_writer_v2
 # Each agent can use a different model for cost/performance optimization
 
+# ===== 기본 제공자 설정 =====
 provider: ollama
 base_url: http://localhost:11434
 
-# Default model for all agents (override per-agent below)
-default_model: gemma4:31b
+# ===== 제공자별 기본 모델 =====
+default_models:
+  ollama: gemma4:31b
+  gemini: gemini-2.5-flash
+  claude: claude-sonnet-4-6
+  openai: gpt-4.1-mini
 
-# Per-agent model override (optional)
-# Use a powerful model for writing/editing, fast model for research/review
+# ===== 에이전트별 모델 오버라이드 (선택) =====
+# 비용 절감: planning/research에 저렴한 모델, writing에 고품질 모델
 agents:
-  planning: gemma4:31b     # needs structured JSON output + deep reasoning
-  research: gemma4:31b     # fact gathering — needs knowledge breadth
-  writing: gemma4:31b      # prose quality is critical
-  reviewer: gemma4:31b     # needs careful analysis
-  editor: gemma4:31b       # style and flow refinement
-  evaluator: gemma4:31b    # scoring — needs consistency
+  planning: null    # null = 기본 모델 사용
+  research: null
+  writing: null     # 품질이 중요 — 고성능 모델 권장
+  reviewer: null
+  editor: null
+  evaluator: null
 
-# Ollama generation parameters
+# ===== 제공자별 상세 설정 =====
 ollama:
-  num_ctx: 8192            # context window size
+  num_ctx: 8192
   temperature:
     planning: 0.3
     research: 0.2
@@ -28,16 +33,41 @@ ollama:
     editor: 0.4
     evaluator: 0.1
 
-# Quality thresholds
-quality:
-  rewrite_threshold: 55    # score below this triggers full rewrite
-  revision_threshold: 70   # score below this shows revision warning
-  max_rewrites: 2          # max rewrite loops per chapter
+gemini:
+  temperature:
+    planning: 0.3
+    research: 0.2
+    writing: 0.7
+    reviewer: 0.1
+    editor: 0.4
+    evaluator: 0.1
 
-# Popular Ollama models to try:
-# - llama3.2        (3B, fast, good quality)
-# - llama3.1:8b     (8B, better quality)
-# - llama3.1:70b    (70B, excellent, needs GPU)
-# - mistral         (7B, good for writing)
-# - qwen2.5:7b      (7B, strong structured output)
-# - gemma2:9b       (9B, Google's model)
+claude:
+  region: us-east5
+  temperature:
+    planning: 0.3
+    research: 0.2
+    writing: 0.7
+    reviewer: 0.1
+    editor: 0.4
+    evaluator: 0.1
+
+openai:
+  temperature:
+    planning: 0.3
+    research: 0.2
+    writing: 0.7
+    reviewer: 0.1
+    editor: 0.4
+    evaluator: 0.1
+
+# ===== 품질 임계값 =====
+quality:
+  rewrite_threshold: 55    # 이 점수 미만 → 전체 재작성
+  revision_threshold: 70   # 이 점수 미만 → 수정 경고
+  max_rewrites: 2          # 챕터당 최대 재작성 횟수
+
+# ===== 추천 모델 조합 =====
+# 고품질:   claude:claude-sonnet-4-6  또는  openai:gpt-4.1
+# 균형:     gemini:gemini-2.5-flash   또는  openai:gpt-4.1-mini
+# 무료/로컬: ollama:gemma4:31b        또는  ollama:llama3.1:8b

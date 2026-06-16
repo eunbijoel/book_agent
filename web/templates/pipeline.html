@@ -4,12 +4,6 @@
 {% block content %}
 <h1>Pipeline</h1>
 
-{% if not ollama_ok %}
-<article class="pico-background-red-500">
-    <p>Ollama 서버에 연결할 수 없습니다. <code>ollama serve</code>를 실행하세요.</p>
-</article>
-{% endif %}
-
 <form method="post" action="/pipeline/run">
     <div class="grid">
         <label>목차 선택
@@ -20,11 +14,16 @@
                 {% endfor %}
             </select>
         </label>
+        <label>Provider
+            <select name="provider" id="provider-select" required>
+                <option value="ollama" {% if ollama_ok %}selected{% endif %}>Ollama (로컬)</option>
+                <option value="gemini">Gemini (GCP)</option>
+                <option value="claude">Claude (GCP Vertex)</option>
+                <option value="openai">OpenAI (API 키)</option>
+            </select>
+        </label>
         <label>모델
-            <select name="model" required>
-                {% for m in models %}
-                <option value="{{ m }}" {% if 'gemma4' in m %}selected{% endif %}>{{ m }}</option>
-                {% endfor %}
+            <select name="model" id="model-select" required>
             </select>
         </label>
     </div>
@@ -47,7 +46,7 @@
         테스트 모드 (짧은 챕터 1500-2500단어)
     </label>
 
-    <button type="submit" {% if not ollama_ok %}disabled{% endif %}>생성 시작</button>
+    <button type="submit">생성 시작</button>
 </form>
 
 <h2>최근 작업</h2>
@@ -56,12 +55,31 @@
 
 {% block scripts %}
 <script>
+const providerModels = {{ provider_models | tojson }};
+
+const providerSelect = document.getElementById('provider-select');
+const modelSelect = document.getElementById('model-select');
+
+function updateModels() {
+    const provider = providerSelect.value;
+    const models = providerModels[provider] || [];
+    modelSelect.innerHTML = models.map(m =>
+        `<option value="${m}">${m}</option>`
+    ).join('');
+    if (!models.length && provider === 'ollama') {
+        modelSelect.innerHTML = '<option value="">Ollama 서버 확인 필요</option>';
+    }
+}
+
+providerSelect.addEventListener('change', updateModels);
+updateModels();
+
 async function loadJobs() {
     const res = await fetch('/pipeline/jobs');
     const jobs = await res.json();
     const el = document.getElementById('jobs');
     if (!jobs.length) { el.innerHTML = '<p>실행 기록 없음</p>'; return; }
-    el.innerHTML = '<table><thead><tr><th>모델</th><th>TOC</th><th>상태</th><th>시작</th><th></th></tr></thead><tbody>' +
+    el.innerHTML = '<table><thead><tr><th>Provider:모델</th><th>TOC</th><th>상태</th><th>시작</th><th></th></tr></thead><tbody>' +
         jobs.map(j => `<tr><td>${j.model}</td><td>${j.toc_file}</td><td>${j.status}</td><td>${new Date(j.started_at).toLocaleString('ko')}</td><td><a href="/pipeline/job/${j.id}">로그</a></td></tr>`).join('') +
         '</tbody></table>';
 }

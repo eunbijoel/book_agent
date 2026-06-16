@@ -1,0 +1,8 @@
+.pytest_cache/
+__pycache__/
+.venv/
+.env
+outputs/
+library_site/
+nohup.out
+*.log

@@ -62,6 +62,16 @@ def _stats_from_chapters(chapter_files: list[Path]) -> tuple[int, float, str]:
     return total_words, avg_score, generated_at
 
 
+def _find_book_dirs(root: Path) -> list[Path]:
+    """Find directories containing chapter markdown files, at any depth."""
+    dirs: list[Path] = []
+    for path in sorted(root.rglob("chapter-*.md")):
+        d = path.parent
+        if d not in dirs:
+            dirs.append(d)
+    return dirs
+
+
 def scan_output_books(outputs_dir: Path | None = None) -> list[dict]:
     """List books under outputs/ that have at least one chapter markdown file."""
     root = outputs_dir or OUTPUTS_DIR
@@ -69,10 +79,7 @@ def scan_output_books(outputs_dir: Path | None = None) -> list[dict]:
         return []
 
     books: list[dict] = []
-    for book_dir in sorted(root.iterdir()):
-        if not book_dir.is_dir():
-            continue
-
+    for book_dir in _find_book_dirs(root):
         chapter_files = _list_chapter_files(book_dir)
         if not chapter_files:
             continue
@@ -86,14 +93,30 @@ def scan_output_books(outputs_dir: Path | None = None) -> list[dict]:
                 report = {}
 
         words, score, generated_at = _stats_from_chapters(chapter_files)
+        chapter_count = len(chapter_files)
+
+        # Prefer chapter files over book_report.json — corrupted reports can
+        # inflate counts when LangGraph state accumulates duplicate entries.
+        report_chapters = report.get("total_chapters")
+        report_words = report.get("total_words")
+        use_report_stats = (
+            report_chapters == chapter_count
+            and report_words is not None
+            and abs(int(report_words) - words) <= max(words, 1) * 0.1
+        )
+
+        rel = book_dir.relative_to(root)
+        slug = str(rel).replace("\\", "/")
 
         books.append({
-            "slug": book_dir.name,
+            "slug": slug,
             "title": _infer_title(book_dir, report),
-            "chapters": report.get("total_chapters", len(chapter_files)),
-            "words": report.get("total_words", words),
+            "chapters": report_chapters if use_report_stats else chapter_count,
+            "words": report_words if use_report_stats else words,
             "score": report.get("average_quality_score", score),
             "generated_at": report.get("generated_at", generated_at),
+            "provider": report.get("provider", ""),
+            "model": report.get("model", ""),
         })
 
     return books

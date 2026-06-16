@@ -1,5 +1,8 @@
-"""Basic unit tests for agent state transformations."""
+"""Basic unit tests for agent state transformations and provider injection."""
 import pytest
+
+from agent.providers.base import BaseProvider
+from agent.providers.ollama import OllamaProvider
 
 
 BASE_STATE = {
@@ -89,3 +92,50 @@ def test_output_manager_save_chapter(tmp_path):
     assert "chapter: 1" in content
     assert "quality_score: 82.5" in content
     assert "Introduction\n\nThis is the first chapter." in content
+
+
+def test_output_manager_consolidated_in_book_dir(tmp_path):
+    """Consolidated outputs should go into book_dir, not base_dir."""
+    from agent.workflows.output_manager import OutputManager
+    om = OutputManager(str(tmp_path), "Test Book")
+    state = {
+        "title": "Test Book",
+        "completed_chapters": [
+            {
+                "number": 1,
+                "title": "Ch1",
+                "content": "Hello world",
+                "first_draft": "Hello draft",
+                "word_count": 2,
+                "evaluation_score": 80.0,
+                "rewrite_count": 0,
+                "evaluation": {},
+                "review": {},
+            }
+        ],
+    }
+    paths = om.save_consolidated_outputs(state)
+    for name, path in paths.items():
+        assert path.exists(), f"{name} not found at {path}"
+        assert "test-book" in str(path), f"{name} should be in book_dir"
+
+
+def test_agents_accept_provider():
+    """All 6 agents should accept a provider in __init__."""
+    from agent.agents import (
+        PlanningAgent, ResearchAgent, WritingAgent,
+        ReviewerAgent, EditorAgent, EvaluatorAgent,
+    )
+    provider = OllamaProvider(model="test")
+    for cls in [PlanningAgent, ResearchAgent, WritingAgent,
+                ReviewerAgent, EditorAgent, EvaluatorAgent]:
+        agent = cls(provider=provider)
+        assert agent is not None
+
+
+def test_strip_markdown_fences():
+    """Markdown fence stripping should work across agents."""
+    from agent.agents.research_agent import _strip_markdown_fences
+    assert _strip_markdown_fences('```json\n{"a": 1}\n```') == '{"a": 1}'
+    assert _strip_markdown_fences('{"a": 1}') == '{"a": 1}'
+    assert _strip_markdown_fences('  ```\ntest\n```  ') == 'test'

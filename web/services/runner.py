@@ -19,20 +19,34 @@ class Job:
     log_path: Path
     toc_file: str
     model: str
+    topic: str | None = None
     status: str = "running"
     started_at: datetime = field(default_factory=datetime.now)
     return_code: int | None = None
+
+    @property
+    def source_label(self) -> str:
+        if self.topic:
+            return self.topic
+        return self.toc_file
 
 
 _jobs: dict[str, Job] = {}
 
 
 def start_generation(
-    toc_file: str,
-    model: str,
+    toc_file: str | None = None,
+    topic: str | None = None,
+    description: str = "",
+    chapters: int = 5,
+    model: str = "gemma4:31b",
     output_dir: str | None = None,
     language: str = "ko",
     words: str = "3000-5000",
+    provider: str = "ollama",
+    input_url: str | None = None,
+    input_file: str | None = None,
+    mode: str = "default",
     extra_args: list[str] | None = None,
 ) -> str:
     out = Path(output_dir) if output_dir else OUTPUTS_DIR
@@ -42,12 +56,28 @@ def start_generation(
 
     cmd = [
         sys.executable, "main.py",
-        "--toc", toc_file,
+        "--provider", provider,
         "--model", model,
         "--output-dir", str(out),
         "--lang", language,
         "--words", words,
     ]
+
+    if toc_file:
+        cmd.extend(["--toc", toc_file])
+    elif topic:
+        cmd.extend(["--topic", topic])
+        if description:
+            cmd.extend(["--description", description])
+        cmd.extend(["--chapters", str(chapters)])
+
+    if input_url:
+        cmd.extend(["--input-url", input_url])
+    if input_file:
+        cmd.extend(["--input-file", input_file])
+    if mode and mode != "default":
+        cmd.extend(["--mode", mode])
+
     if extra_args:
         cmd.extend(extra_args)
 
@@ -61,7 +91,8 @@ def start_generation(
 
     job = Job(
         id=job_id, process=proc, log_path=log_path,
-        toc_file=toc_file, model=model,
+        toc_file=toc_file or "", model=f"{provider}:{model}",
+        topic=topic,
     )
     _jobs[job_id] = job
 

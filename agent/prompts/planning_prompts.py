@@ -43,6 +43,6 @@ Language: {language}
 
 Additional guidelines:
 {guidelines}
-
+{source_summary}
 Create a detailed book architecture that ensures logical flow, comprehensive coverage, and high reader value.
 Output valid JSON only."""

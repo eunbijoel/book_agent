@@ -10,6 +10,7 @@ from agent.agents.writing_agent import WritingAgent
 from agent.agents.reviewer_agent import ReviewerAgent
 from agent.agents.editor_agent import EditorAgent
 from agent.agents.evaluator_agent import EvaluatorAgent
+from agent.providers.base import BaseProvider
 from agent.workflows.state import BookState
 
 logger = logging.getLogger(__name__)
@@ -20,14 +21,13 @@ MAX_REWRITES = 2
 def build_chapter_workflow(config: dict[str, Any]) -> Any:
     """Build the per-chapter LangGraph workflow."""
 
-    model = config.get("model", "llama3.2")
-    base_url = config.get("base_url", "http://localhost:11434")
+    provider: BaseProvider = config["provider"]
 
-    research = ResearchAgent(model=model, base_url=base_url)
-    writer = WritingAgent(model=model, base_url=base_url)
-    reviewer = ReviewerAgent(model=model, base_url=base_url)
-    editor = EditorAgent(model=model, base_url=base_url)
-    evaluator = EvaluatorAgent(model=model, base_url=base_url)
+    research = ResearchAgent(provider=provider)
+    writer = WritingAgent(provider=provider)
+    reviewer = ReviewerAgent(provider=provider)
+    editor = EditorAgent(provider=provider)
+    evaluator = EvaluatorAgent(provider=provider)
 
     def research_node(state: BookState) -> BookState:
         return research.run(state)
@@ -94,9 +94,11 @@ def build_chapter_workflow(config: dict[str, Any]) -> Any:
             "summary": _extract_summary(state["current_draft"]),
             "key_terms": state.get("glossary_terms", [])[:10],
         }
+        completed = list(state.get("completed_chapters", []))
+        completed.append(completed_entry)
         return {
             **state,
-            "completed_chapters": [completed_entry],
+            "completed_chapters": completed,
         }
 
     def _extract_summary(text: str) -> str:

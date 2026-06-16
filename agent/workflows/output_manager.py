@@ -14,12 +14,14 @@ logger = logging.getLogger(__name__)
 class OutputManager:
     """Handles file I/O for book chapters and progress tracking."""
 
-    def __init__(self, output_dir: str, book_title: str):
+    def __init__(self, output_dir: str, book_title: str, provider_name: str = "", model_name: str = ""):
         self.base_dir = Path(output_dir)
         self.book_slug = slugify(book_title, max_length=80)
         self.book_dir = self.base_dir / self.book_slug
         self.book_dir.mkdir(parents=True, exist_ok=True)
         self.progress_file = self.book_dir / ".progress.json"
+        self.provider_name = provider_name
+        self.model_name = model_name
 
     def save_chapter(self, chapter_data: dict[str, Any]) -> Path:
         num = chapter_data["number"]
@@ -40,6 +42,8 @@ class OutputManager:
             f"word_count: {word_count}\n"
             f"quality_score: {score:.1f}\n"
             f"rewrite_count: {rewrite_count}\n"
+            f"provider: {self.provider_name}\n"
+            f"model: {self.model_name}\n"
             f"generated_at: {datetime.now(timezone.utc).isoformat()}\n"
             f"---\n\n"
         )
@@ -72,14 +76,24 @@ class OutputManager:
             encoding="utf-8",
         )
 
+    @staticmethod
+    def _dedupe_completed_chapters(completed: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Keep the latest entry per chapter number."""
+        by_number: dict[int, dict[str, Any]] = {}
+        for ch in completed:
+            by_number[int(ch["number"])] = ch
+        return sorted(by_number.values(), key=lambda c: c["number"])
+
     def save_book_report(self, state: dict[str, Any]) -> Path:
-        completed = state.get("completed_chapters", [])
+        completed = self._dedupe_completed_chapters(state.get("completed_chapters", []))
         scores = [ch.get("evaluation_score", 0) for ch in completed if ch.get("evaluation_score")]
         avg_score = sum(scores) / len(scores) if scores else 0.0
         total_words = sum(ch.get("word_count", 0) for ch in completed)
 
         report = {
             "book_title": state.get("title", ""),
+            "provider": state.get("provider_name", "") or self.provider_name,
+            "model": state.get("model_name", "") or self.model_name,
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "total_chapters": len(completed),
             "total_words": total_words,
@@ -107,7 +121,7 @@ class OutputManager:
 
     def save_consolidated_outputs(self, state: dict[str, Any]) -> dict[str, Path]:
         title = state.get("title", "Untitled")
-        completed = sorted(state.get("completed_chapters", []), key=lambda c: c["number"])
+        completed = self._dedupe_completed_chapters(state.get("completed_chapters", []))
         generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
         paths = {}
 
@@ -123,11 +137,11 @@ class OutputManager:
             return "\n".join(lines)
 
         book_v1 = compile_book(completed, "first_draft", "V1 - First Draft")
-        paths["book_v1"] = self.base_dir / "book_v1.md"
+        paths["book_v1"] = self.book_dir / "book_v1.md"
         paths["book_v1"].write_text(book_v1, encoding="utf-8")
 
         book_v2 = compile_book(completed, "content", "V2 - Reviewed & Edited")
-        paths["book_v2"] = self.base_dir / "book_v2.md"
+        paths["book_v2"] = self.book_dir / "book_v2.md"
         paths["book_v2"].write_text(book_v2, encoding="utf-8")
 
         final_lines = [f"# {title}\n", f"*Final Version | Generated: {generated_at}*\n"]
@@ -139,7 +153,7 @@ class OutputManager:
             final_lines.append(f"\n## Chapter {ch['number']}: {ch['title']}\n")
             final_lines.append(ch.get("content", ""))
             final_lines.append("\n\n---\n")
-        paths["book_final"] = self.base_dir / "book_final.md"
+        paths["book_final"] = self.book_dir / "book_final.md"
         paths["book_final"].write_text("\n".join(final_lines), encoding="utf-8")
 
         scores = [ch.get("evaluation_score", 0) for ch in completed if ch.get("evaluation_score")]
@@ -177,7 +191,7 @@ class OutputManager:
                 for imp in improvements:
                     eval_lines.append(f"- {imp}")
             eval_lines.append("")
-        paths["evaluation_report"] = self.base_dir / "evaluation_report.md"
+        paths["evaluation_report"] = self.book_dir / "evaluation_report.md"
         paths["evaluation_report"].write_text("\n".join(eval_lines), encoding="utf-8")
 
         review_lines = [f"# Review Checklist: {title}\n", f"*Generated: {generated_at}*\n"]
@@ -205,7 +219,7 @@ class OutputManager:
                 for s in strengths:
                     review_lines.append(f"- {s}")
             review_lines.append("")
-        paths["review_checklist"] = self.base_dir / "review_checklist.md"
+        paths["review_checklist"] = self.book_dir / "review_checklist.md"
         paths["review_checklist"].write_text("\n".join(review_lines), encoding="utf-8")
 
         for name, path in paths.items():

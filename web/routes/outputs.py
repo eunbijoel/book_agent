@@ -22,10 +22,15 @@ async def list_outputs(request: Request):
     })
 
 
-@router.delete("/{slug}")
+@router.delete("/{slug:path}")
 async def delete_output(slug: str):
-    path = OUTPUTS_DIR / slug
+    path = (OUTPUTS_DIR / slug).resolve()
+    if not str(path).startswith(str(OUTPUTS_DIR.resolve())):
+        return {"ok": False, "error": "invalid path"}
     if path.exists() and path.is_dir():
         shutil.rmtree(path)
+        parent = path.parent
+        if parent != OUTPUTS_DIR.resolve() and parent.is_dir() and not any(parent.iterdir()):
+            parent.rmdir()
         return {"ok": True}
     return {"ok": False, "error": "not found"}

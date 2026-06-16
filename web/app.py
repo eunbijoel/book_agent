@@ -28,18 +28,34 @@ def create_app() -> FastAPI:
 
     @app.get("/", response_class=HTMLResponse)
     async def index(request: Request):
-        toc_count = len(list(TOC_DIR.glob("*.json"))) if TOC_DIR.exists() else 0
+        toc_files = sorted(TOC_DIR.glob("*.json")) if TOC_DIR.exists() else []
+
+        from web.routes.toc import _load_tocs
+        tocs = _load_tocs()
 
         books = scan_output_books(OUTPUTS_DIR)
 
         from web.services.runner import get_all_jobs
-        active_jobs = [j for j in get_all_jobs() if j.status == "running"]
+        from web.services import ollama
 
-        return tmpl.TemplateResponse("index.html", {
+        try:
+            ollama_models = [m["name"] for m in ollama.list_models()]
+        except Exception:
+            ollama_models = []
+
+        provider_models = {
+            **pipeline.PROVIDER_MODELS,
+            "ollama": ollama_models,
+        }
+
+        return tmpl.TemplateResponse("dashboard.html", {
             "request": request,
-            "toc_count": toc_count,
+            "toc_files": [f.name for f in toc_files],
+            "tocs": tocs,
             "books": books,
-            "active_jobs": active_jobs,
+            "jobs": get_all_jobs(),
+            "ollama_ok": ollama.is_running(),
+            "provider_models": provider_models,
         })
 
     return app

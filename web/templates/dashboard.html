@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Agent</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <h3><a href="/">Book Agent</a></h3>
+            <nav>
+                <ul>
+                    <li><a href="#generate" data-section="generate" class="active">생성</a></li>
+                    <li><a href="#toc" data-section="toc">TOC 관리</a></li>
+                    <li><a href="#books" data-section="books">책 목록</a></li>
+                    <li><a href="#jobs" data-section="jobs">작업 현황</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="content-area">
+            <!-- ===== 생성 섹션 ===== -->
+            <section id="section-generate" class="dash-section">
+                <h2>책 생성</h2>
+
+                <form id="generate-form">
+                    <fieldset>
+                        <legend>입력 방식</legend>
+                        <label><input type="radio" name="input_mode" value="topic" checked> 주제만 입력</label>
+                        <label><input type="radio" name="input_mode" value="url"> URL 기반</label>
+                        <label><input type="radio" name="input_mode" value="toc"> 기존 목차 선택</label>
+                    </fieldset>
+
+                    <!-- 주제 입력 모드 -->
+                    <div id="topic-fields">
+                        <label>주제 / 제목
+                            <input type="text" name="topic" placeholder="예: 파이썬 기초, 카자흐스탄 여행 가이드">
+                        </label>
+                        <div class="grid">
+                            <label>설명 (선택)
+                                <textarea name="topic_description" rows="2" placeholder="책에 대한 간단한 설명"></textarea>
+                            </label>
+                            <label>챕터 수
+                                <input type="number" name="topic_chapters" value="5" min="1" max="30">
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- URL 입력 모드 -->
+                    <div id="url-fields" style="display:none">
+                        <label>소스 URL (여러 개는 쉼표로 구분)
+                            <textarea name="input_url" rows="2" placeholder="https://example.com/article1, https://example.com/article2"></textarea>
+                        </label>
+                        <label>주제 / 제목 (선택, 비우면 URL에서 추출)
+                            <input type="text" name="url_topic" placeholder="예: 기사 분석, 기술 비교">
+                        </label>
+                        <div class="grid">
+                            <label>설명 (선택)
+                                <textarea name="topic_description" rows="2" placeholder="책에 대한 간단한 설명"></textarea>
+                            </label>
+                            <label>챕터 수
+                                <input type="number" name="topic_chapters" value="5" min="1" max="30">
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- TOC 선택 모드 -->
+                    <div id="toc-fields" style="display:none">
+                        <label>목차 선택
+                            <select name="toc_file">
+                                <option value="">-- 선택 --</option>
+                                {% for f in toc_files %}
+                                <option value="{{ f }}">{{ f }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                    </div>
+
+                    <div class="grid">
+                        <label>Provider
+                            <select name="provider" id="provider-select">
+                                <option value="ollama" {% if ollama_ok %}selected{% endif %}>Ollama (로컬)</option>
+                                <option value="gemini">Gemini (GCP)</option>
+                                <option value="claude">Claude (GCP Vertex)</option>
+                                <option value="openai">OpenAI (API 키)</option>
+                            </select>
+                        </label>
+                        <label>모델
+                            <select name="model" id="model-select"></select>
+                        </label>
+                    </div>
+
+                    <div class="grid">
+                        <label>언어
+                            <select name="language">
+                                <option value="ko" selected>Korean</option>
+                                <option value="en">English</option>
+                                <option value="ja">Japanese</option>
+                            </select>
+                        </label>
+                        <label>챕터당 단어 수
+                            <input type="text" name="words" value="3000-5000">
+                        </label>
+                    </div>
+
+                    <label>
+                        <input type="checkbox" name="test_mode" value="true">
+                        테스트 모드 (짧은 챕터 1500-2500단어)
+                    </label>
+
+                    <button type="submit">생성 시작</button>
+                </form>
+
+                <div id="generate-result" style="display:none">
+                    <article>
+                        <p id="generate-msg"></p>
+                    </article>
+                </div>
+            </section>
+
+            <!-- ===== TOC 관리 섹션 ===== -->
+            <section id="section-toc" class="dash-section" style="display:none">
+                <hgroup>
+                    <h2>목차 관리</h2>
+                    <p>책의 목차(TOC) 파일을 생성하고 관리합니다.</p>
+                </hgroup>
+
+                <a href="/toc/create" role="button">+ 새 목차 만들기</a>
+
+                {% if tocs %}
+                <table>
+                    <thead>
+                        <tr><th>제목</th><th>챕터</th><th>언어</th><th>파일</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        {% for toc in tocs %}
+                        <tr>
+                            <td><a href="/toc/{{ toc.filename }}">{{ toc.title }}</a></td>
+                            <td>{{ toc.chapters }}개</td>
+                            <td>{{ toc.language }}</td>
+                            <td><code>{{ toc.filename }}</code></td>
+                            <td>
+                                <a href="/toc/{{ toc.filename }}">수정</a>
+                                <a href="#" class="secondary" onclick="deleteToc('{{ toc.filename }}')">삭제</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p>아직 목차가 없습니다. 새로 만들어 보세요.</p>
+                {% endif %}
+            </section>
+
+            <!-- ===== 책 목록 섹션 ===== -->
+            <section id="section-books" class="dash-section" style="display:none">
+                <hgroup>
+                    <h2>생성된 책</h2>
+                    <p>{{ books|length }}권</p>
+                </hgroup>
+
+                {% if books %}
+                <div class="grid">
+                    {% for book in books %}
+                    <article>
+                        <header>
+                            <a href="/reader/{{ book.slug }}"><strong>{{ book.title }}</strong></a>
+                        </header>
+                        <p>
+                            {{ book.chapters }}개 챕터 &middot;
+                            {{ "{:,}".format(book.words) }} 단어 &middot;
+                            품질 {{ "%.1f"|format(book.score) }}/100
+                            <br><small>모델: {{ book.provider ~ " / " ~ book.model if book.provider else "미기록" }}</small>
+                        </p>
+                        {% if book.generated_at %}
+                        <small>{{ book.generated_at[:10] }}</small>
+                        {% endif %}
+                        <footer>
+                            <a href="/reader/{{ book.slug }}" role="button" class="outline">읽기</a>
+                            <a href="#" role="button" class="outline secondary" onclick="deleteBook('{{ book.slug }}', '{{ book.title }}')">삭제</a>
+                        </footer>
+                    </article>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p>아직 생성된 책이 없습니다. 생성 탭에서 만들어 보세요.</p>
+                {% endif %}
+            </section>
+
+            <!-- ===== 작업 현황 섹션 ===== -->
+            <section id="section-jobs" class="dash-section" style="display:none">
+                <h2>작업 현황</h2>
+                <div id="jobs-list"></div>
+                <div id="job-viewer" style="display:none">
+                    <h3 id="job-viewer-title"></h3>
+                    <pre id="log" class="log-container"></pre>
+                    <p id="status-msg"></p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+    const providerModels = {{ provider_models | tojson }};
+    </script>
+    <script src="/static/js/log_stream.js"></script>
+    <script src="/static/js/dashboard.js"></script>
+</body>
+</html>

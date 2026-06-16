@@ -5,9 +5,6 @@
 
 [Library: 생성된 책 모아보기](https://eunbijoel.github.io/book_agent/)
 
-
-<img width="1536" height="1024" alt="Book Agent" src="https://github.com/user-attachments/assets/1ca57707-6ae5-4aab-a91c-0b75b90818ff" />
-
 ## 프로젝트 구조
 
 ```
@@ -130,7 +127,6 @@ graph LR
 ### Book Writing Agent 실행 페이지 
 <img width="1207" height="791" alt="image" src="https://github.com/user-attachments/assets/ac1291db-901c-45f3-91ca-f9fe65b5e3e4" />
 
-
 ---
 
 ## 에이전트 구조
@@ -195,20 +191,25 @@ graph LR
 ## CLI 옵션
 
 
-| 옵션              | 기본값                                              | 설명                   |
-| --------------- | ------------------------------------------------ | -------------------- |
-| `--toc`         | —                                                | 목차 JSON 파일 경로        |
-| `--title`       | —                                                | 책 제목 (--toc 대신 사용)   |
-| `--topic`       | —                                                | 주제 (제목 자동 생성)        |
-| `--description` | ""                                               | 책 설명                 |
-| `--chapters`    | 5                                                | 챕터 수 (--toc 미사용 시)   |
-| `--model`       | gemma4:31b                                       | Ollama 모델 이름         |
-| `--base-url`    | [http://localhost:11434](http://localhost:11434) | Ollama 서버 주소         |
-| `--output-dir`  | ./outputs                                        | 결과물 저장 폴더            |
-| `--words`       | 3000-5000                                        | 챕터당 목표 단어 수          |
-| `--lang`        | ko                                               | 작성 언어                |
-| `--test-mode`   | —                                                | 짧은 챕터 (1500-2500 단어) |
-| `--publish`     | —                                                | 완료 후 MkDocs 사이트 생성   |
+| 옵션              | 기본값             | 설명                                   |
+| --------------- | --------------- | ------------------------------------ |
+| `--toc`         | —               | 목차 JSON 파일 경로                        |
+| `--title`       | —               | 책 제목 (--toc 대신 사용)                   |
+| `--topic`       | —               | 주제 (제목 자동 생성)                        |
+| `--description` | ""              | 책 설명                                 |
+| `--chapters`    | 5               | 챕터 수 (--toc 미사용 시)                   |
+| `--provider`    | ollama          | 모델 제공자 (ollama/gemini/claude/openai) |
+| `--model`       | (provider별 기본값) | 모델 이름                                |
+| `--input-url`   | —               | 소스 URL (쉼표 구분으로 여러 개 가능)             |
+| `--input-file`  | —               | 소스 파일 경로 (PDF/TXT/MD/DOCX/CSV/XLSX)  |
+| `--mode`        | default         | 생성 모드 (data-book: 데이터 분석 기반)         |
+| `--base-url`    | localhost:11434 | Ollama 서버 주소                         |
+| `--output-dir`  | ./outputs       | 결과물 저장 폴더                            |
+| `--words`       | 3000-5000       | 챕터당 목표 단어 수                          |
+| `--lang`        | ko              | 작성 언어                                |
+| `--test-mode`   | —               | 짧은 챕터 (1500-2500 단어)                 |
+| `--publish`     | —               | 완료 후 MkDocs 사이트 생성                   |
+| `--no-check`    | —               | 프로바이더 검증 건너뛰기                        |
 
 
 ---
@@ -230,8 +231,11 @@ outputs/
 ## 도서관 및 에이전트 실행 페이지
 
 ```bash
-uvicorn web.app:app --reload --host 127.0.0.1 --port 8080
+uvicorn web.app:app --reload --host 127.0.0.1 --port 8080 #에이전트 실행
+
+python3 library/generator.py --outputs outputs --out library_site # 도서관 사이트 생성
 ```
+
 Book Agent Dashboard에서 책 수정, 생성, 저장 후->
 도서관 랜딩 페이지에서 모든 책이 카드 형태로 표시되고, 클릭하면 챕터별로 읽을 수 있습니다.
 
@@ -272,6 +276,34 @@ pip install -e ".[dev]"
 | 실시간 로그  | 터미널        | 터미널         | WebSocket 스트리밍           |
 | 출력물 관리  | 수동         | 수동          | 웹에서 조회/삭제                |
 
+
+---
+
+0615 업데이트 (구현 완료):
+
+### - 멀티 프로바이더 완성
+
+Ollama 외에 **Gemini**, **Claude (Vertex AI)**, **3**개 프로바이더를 지원합니다.        
+
+### - 웹 UI 단일 페이지 대시보드
+
+기존 4개 별도 페이지를 **사이드바 기반 단일 페이지**로 통합했습니다.
+
+### **-** 입력 파이프라인 (Phase 3-5)
+
+주제 입력 외에 **URL**, **파일**, **데이터** 소스를 지원합니다.
+
+PlanningAgent와 ResearchAgent가 소스 자료를 자동으로 분석하여 챕터 구성과 내용에 반영합니다.
+
+### 버그 수정
+
+- Gemini/Claude에서 `KeyError: 'current_chapter'` — 그래프 조건부 엣지 전환으로 수정
+- Gemini JSON 마크다운 펜스 처리 (`_strip_markdown_fences`) — 6개 에이전트에 적용
+- PlanningAgent JSON 복구 로직 (`_repair_truncated_json`) — 잘린 JSON 자동 복원
+- `output_manager` consolidated 파일이 잘못된 경로에 저장되는 문제 수정
+- 중첩 디렉토리 책 탐색 및 reader 라우트 지원
+
+### 테스트
 
 ---
 

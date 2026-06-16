@@ -24,3 +24,61 @@
 article header {
     font-size: 1.1rem;
 }
+
+/* ===== Dashboard sidebar layout ===== */
+.dashboard-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 220px;
+    padding: 1.5rem 1rem;
+    border-right: 1px solid var(--pico-muted-border-color);
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    height: 100vh;
+    overflow-y: auto;
+    flex-shrink: 0;
+}
+
+.sidebar h3 { margin-bottom: 1.5rem; }
+.sidebar h3 a { text-decoration: none; }
+.sidebar nav ul { list-style: none; padding: 0; margin: 0; }
+.sidebar nav li { margin-bottom: 0.25rem; }
+.sidebar nav a {
+    display: block;
+    padding: 0.5rem 0.8rem;
+    border-radius: 6px;
+    text-decoration: none;
+    color: var(--pico-color);
+    transition: background 0.15s;
+}
+.sidebar nav a:hover { background: var(--pico-secondary-background); }
+.sidebar nav a.active {
+    background: var(--pico-primary-background);
+    color: var(--pico-primary-inverse);
+    font-weight: 600;
+}
+
+.content-area {
+    flex: 1;
+    padding: 2rem 2.5rem;
+    min-width: 0;
+    max-width: 960px;
+}
+
+@media (max-width: 768px) {
+    .dashboard-layout { flex-direction: column; }
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: static;
+        border-right: none;
+        border-bottom: 1px solid var(--pico-muted-border-color);
+        padding: 1rem;
+    }
+    .sidebar nav ul { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .content-area { padding: 1rem; }
+}

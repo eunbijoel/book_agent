@@ -6,17 +6,30 @@ import re
 from typing import Any
 
 from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_ollama import ChatOllama
 
 from agent.prompts.planning_prompts import PLANNING_SYSTEM, PLANNING_USER
+from agent.providers.base import BaseProvider
 
 logger = logging.getLogger(__name__)
 
 MAX_RETRIES = 2
 
 
+def _strip_markdown_fences(raw: str) -> str:
+    """Remove ```json ... ``` wrappers that some models add."""
+    text = raw.strip()
+    if text.startswith("```"):
+        first_nl = text.find("\n")
+        if first_nl > 0:
+            text = text[first_nl + 1:]
+        if text.endswith("```"):
+            text = text[:-3]
+    return text.strip()
+
+
 def _repair_truncated_json(raw: str) -> dict | None:
     """Try to repair JSON that was truncated mid-generation."""
+    raw = _strip_markdown_fences(raw)
     start = raw.find("{")
     if start < 0:
         return None
@@ -68,18 +81,13 @@ def _repair_truncated_json(raw: str) -> dict | None:
 class PlanningAgent:
     """Designs the complete book architecture before writing begins."""
 
-    def __init__(self, model: str = "llama3.2", base_url: str = "http://localhost:11434"):
-        self.llm = ChatOllama(
-            model=model,
-            base_url=base_url,
-            temperature=0.3,
-            format="json",
-            num_ctx=8192,
-            num_predict=4096,
-        )
+    def __init__(self, provider: BaseProvider):
+        self.llm = provider.get_chat_model(temperature=0.3, json_mode=True, max_tokens=4096)
 
     def run(self, state: dict[str, Any]) -> dict[str, Any]:
         logger.info("PlanningAgent: Designing book architecture for '%s'", state["title"])
+
+        source_summary = self._build_source_summary(state.get("source_materials", []))
 
         user_prompt = PLANNING_USER.format(
             title=state["title"],
@@ -88,6 +96,7 @@ class PlanningAgent:
             words_per_chapter=state.get("words_per_chapter", "3000-5000"),
             language=state.get("language", "English"),
             guidelines="\n".join(f"- {g}" for g in state.get("writing_guidelines", [])) or "None",
+            source_summary=source_summary,
         )
 
         messages = [
@@ -104,7 +113,7 @@ class PlanningAgent:
                 raw = response.content
 
                 try:
-                    plan_data = json.loads(raw)
+                    plan_data = json.loads(_strip_markdown_fences(raw))
                 except json.JSONDecodeError:
                     logger.warning("PlanningAgent: JSON parse failed (attempt %d), repairing", attempt)
                     plan_data = _repair_truncated_json(raw)
@@ -136,3 +145,16 @@ class PlanningAgent:
             "cross_chapter_threads": book_plan.get("cross_chapter_threads", []),
             "planned_chapters": book_plan.get("chapters", []),
         }
+
+    @staticmethod
+    def _build_source_summary(materials: list[dict]) -> str:
+        if not materials:
+            return ""
+
+        parts = ["\nSource materials (base your chapter structure on these):"]
+        for i, m in enumerate(materials, 1):
+            title = m.get("title", m.get("source_path", f"Source {i}"))
+            content = m.get("content", "")[:3000]
+            parts.append(f"\n--- Source {i}: {title} ---\n{content}")
+
+        return "\n".join(parts)

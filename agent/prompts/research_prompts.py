@@ -39,6 +39,6 @@ Book context:
 - Target audience: {target_audience}
 - Tone: {tone}
 - Core themes: {core_themes}
-
+{source_chunks}
 Gather facts, examples, context, and references that will strengthen this chapter.
 Output valid JSON only."""

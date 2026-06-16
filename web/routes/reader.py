@@ -38,20 +38,31 @@ def _list_chapters(book_dir: Path) -> list[dict]:
     return chapters
 
 
-@router.get("/{slug}", response_class=HTMLResponse)
-async def book_overview(request: Request, slug: str):
+def _load_report(book_dir: Path) -> dict:
+    report_path = book_dir / "book_report.json"
+    if report_path.exists():
+        try:
+            return json.loads(report_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            pass
+    return {}
+
+
+@router.get("/{slug:path}", response_class=HTMLResponse)
+async def book_or_chapter(request: Request, slug: str):
+    parts = slug.rsplit("/", 1)
+    if len(parts) == 2 and parts[1].isdigit():
+        book_slug, chapter_num = parts[0], int(parts[1])
+        book_dir = OUTPUTS_DIR / book_slug
+        if book_dir.is_dir():
+            return _render_chapter(request, book_slug, book_dir, chapter_num)
+
     book_dir = OUTPUTS_DIR / slug
     if not book_dir.exists():
         return HTMLResponse("<h1>Not found</h1>", status_code=404)
 
     chapters = _list_chapters(book_dir)
-    report_path = book_dir / "book_report.json"
-    report = {}
-    if report_path.exists():
-        try:
-            report = json.loads(report_path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
-            pass
+    report = _load_report(book_dir)
 
     return templates.TemplateResponse("reader.html", {
         "request": request,
@@ -64,9 +75,7 @@ async def book_overview(request: Request, slug: str):
     })
 
 
-@router.get("/{slug}/{chapter_num}", response_class=HTMLResponse)
-async def read_chapter(request: Request, slug: str, chapter_num: int):
-    book_dir = OUTPUTS_DIR / slug
+def _render_chapter(request: Request, slug: str, book_dir: Path, chapter_num: int):
     chapters = _list_chapters(book_dir)
 
     current = None
@@ -83,13 +92,7 @@ async def read_chapter(request: Request, slug: str, chapter_num: int):
     md = markdown.Markdown(extensions=["fenced_code", "tables", "toc"])
     chapter_html = md.convert(content)
 
-    report_path = book_dir / "book_report.json"
-    report = {}
-    if report_path.exists():
-        try:
-            report = json.loads(report_path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
-            pass
+    report = _load_report(book_dir)
 
     return templates.TemplateResponse("reader.html", {
         "request": request,

@@ -34,7 +34,7 @@
             {% endfor %}
         </ul>
         <hr>
-        <a href="/outputs/">&larr; 목록으로</a>
+        <a href="/#books">&larr; 목록으로</a>
     </aside>
 
     <div class="chapter-content">
@@ -61,6 +61,9 @@
                 {{ report.get('total_chapters', 0) }}개 챕터 &middot;
                 {{ "{:,}".format(report.get('total_words', 0)) }} 단어 &middot;
                 품질 {{ "%.1f"|format(report.get('average_quality_score', 0)) }}/100
+                {% if report.get('provider') %}
+                <br><small>모델: {{ report.get('provider') }} / {{ report.get('model') }}</small>
+                {% endif %}
             </p>
             <p>왼쪽에서 챕터를 선택하세요.</p>
         {% else %}
