@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>6장: 원격 저장소와 협업: 함께 코드를 만들다 - Git 기초</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: "Noto Sans KR", system-ui, sans-serif; background: #fff; color: #333; }
+        .layout { display: flex; min-height: 100vh; }
+        .sidebar { width: 260px; background: #f8f9fa; border-right: 1px solid #e0e0e0; padding: 1.5rem; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+        .sidebar h3 { font-size: 1rem; margin-bottom: 1rem; }
+        .sidebar h3 a { color: #1a1a2e; text-decoration: none; }
+        .sidebar ul { list-style: none; }
+        .sidebar li { margin-bottom: 0.4rem; }
+        .sidebar a { color: #555; text-decoration: none; font-size: 0.9rem; display: block; padding: 0.3rem 0.5rem; border-radius: 4px; }
+        .sidebar a:hover { background: #e8e8e8; }
+        .sidebar a.active { background: #1a1a2e; color: #fff; }
+        .sidebar .back { margin-top: 1.5rem; font-size: 0.85rem; }
+        .content { flex: 1; padding: 2rem 3rem; max-width: 800px; }
+        .content h1 { font-size: 1.8rem; margin-bottom: 1rem; border-bottom: 2px solid #e0e0e0; padding-bottom: 0.5rem; }
+        .content h2 { font-size: 1.4rem; margin-top: 2rem; margin-bottom: 0.8rem; }
+        .content h3 { font-size: 1.15rem; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+        .content p { line-height: 1.8; margin-bottom: 1rem; }
+        .content ul, .content ol { margin: 1rem 0 1rem 2rem; line-height: 1.8; }
+        .content blockquote { border-left: 4px solid #e94560; padding-left: 1rem; margin: 1rem 0; color: #666; }
+        .content code { background: #f0f0f0; padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.9em; }
+        .content pre { background: #1a1a2e; color: #e0e0e0; padding: 1rem; border-radius: 8px; overflow-x: auto; margin: 1rem 0; }
+        .content pre code { background: none; padding: 0; }
+        .chapter-nav { display: flex; justify-content: space-between; margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #e0e0e0; }
+        .chapter-nav a { color: #1a1a2e; text-decoration: none; }
+        .chapter-nav a:hover { color: #e94560; }
+        @media (max-width: 768px) {
+            .layout { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; position: static; }
+            .content { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <nav class="sidebar">
+            <h3><a href="../index.html">Git 기초</a></h3>
+            <ul>
+                
+                <li>
+                    <a href="chapter-01.html"
+                       >
+                        1. 1장: 버전 관리와 Git의 이해
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="chapter-02.html"
+                       >
+                        2. 2장. Git 설치 및 기본 설정: 버전 관리의 첫걸음
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="chapter-03.html"
+                       >
+                        3. 3장: 로컬 저장소 시작하기: 커밋의 기본
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="chapter-04.html"
+                       >
+                        4. 4장: 변경 이력 탐색 및 관리
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="chapter-05.html"
+                       >
+                        5. 5. 브랜치와 병합: Git의 핵심
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="chapter-06.html"
+                       class="active">
+                        6. 6장: 원격 저장소와 협업: 함께 코드를 만들다
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="chapter-07.html"
+                       >
+                        7. 1. 파일 수정
+                    </a>
+                </li>
+                
+            </ul>
+            <div class="back">
+                <a href="../index.html">&larr; 도서관으로</a>
+            </div>
+        </nav>
+
+        <article class="content">
+            <h1 id="6">6장: 원격 저장소와 협업: 함께 코드를 만들다</h1>
+<p>상상해 보세요. 여러분은 이제 Git의 로컬 저장소를 능숙하게 다룰 수 있게 되었습니다. 변경 사항을 추적하고, 과거로 돌아가고, 브랜치를 사용하여 여러 아이디어를 동시에 탐색하는 것이 익숙합니다. 하지만 소프트웨어 개발은 대부분 혼자 하는 작업이 아닙니다. 팀원들과 함께 코드를 공유하고, 서로의 변경 사항을 통합하며, 공동의 목표를 향해 나아가야 합니다. 여러분의 로컬 저장소에만 코드가 있다면, 다른 팀원은 어떻게 여러분의 작업을 볼 수 있을까요? 또, 여러분은 다른 팀원이 만든 새로운 기능을 어떻게 가져올 수 있을까요?</p>
+<p>이 질문에 대한 답이 바로 <strong>원격 저장소(Remote Repository)</strong>입니다. 원격 저장소는 팀원들이 코드를 공유하고 협업할 수 있는 중앙 허브 역할을 합니다. 이 장에서는 Git의 가장 강력한 기능 중 하나인 원격 저장소를 활용하여 다른 개발자들과 효율적으로 협업하는 방법을 배웁니다. 로컬 저장소와 원격 저장소 간의 동기화 메커니즘을 이해하고, 실제 프로젝트에서 사용되는 핵심 Git 명령어를 익히게 될 것입니다.</p>
+<h2 id="_1">원격 저장소란 무엇인가?</h2>
+<p>Git은 <strong>분산 버전 관리 시스템(Distributed Version Control System, DVCS)</strong>입니다. 이는 각 개발자가 코드의 전체 이력(history)을 자신의 로컬 컴퓨터에 가지고 있다는 의미입니다. 이러한 분산적인 특성 덕분에 네트워크 연결 없이도 작업할 수 있고, 중앙 서버에 문제가 생겨도 작업에 지장이 없습니다.</p>
+<p>하지만 팀 프로젝트에서는 이러한 개별적인 로컬 저장소들을 동기화하고 변경 사항을 공유할 수 있는 '중앙 지점' 또는 '공유된 공간'이 필요합니다. <strong>원격 저장소</strong>는 바로 이 역할을 수행합니다. 인터넷이나 내부 네트워크를 통해 접근 가능한 Git 저장소로, 여러 개발자가 코드를 공유하고, 다른 사람의 작업을 확인하고, 자신의 작업을 다른 사람에게 공개할 수 있는 협업의 허브입니다.</p>
+<p>원격 저장소는 다음과 같은 중요한 역할을 합니다.</p>
+<ul>
+<li><strong>협업의 중심:</strong> 팀원들이 자신의 변경 사항을 업로드(push)하고, 다른 팀원의 변경 사항을 다운로드(pull)하여 프로젝트의 최신 상태를 유지할 수 있습니다.</li>
+<li><strong>코드 백업:</strong> 로컬 저장소에 문제가 발생하더라도 원격 저장소에 코드가 안전하게 보관되어 있어 데이터 손실을 방지합니다.</li>
+<li><strong>코드 공유 및 검토:</strong> 다른 개발자들이 여러분의 코드를 검토(Code Review)하고 피드백을 줄 수 있는 기반을 마련합니다.</li>
+</ul>
+<p>많은 개발팀은 GitHub, GitLab, Bitbucket과 같은 <strong>Git 호스팅 서비스</strong>를 사용하여 원격 저장소를 관리합니다. 이 서비스들은 단순히 Git 저장소를 호스팅하는 것을 넘어, 코드 리뷰를 위한 Pull Request(또는 Merge Request), 이슈 트래킹, CI/CD(지속적 통합/지속적 배포) 통합 등 협업을 위한 다양한 부가 기능을 제공합니다.</p>
+<blockquote>
+<p><strong>오해 풀기: GitHub가 곧 Git이다?</strong>
+많은 초보 개발자들이 GitHub가 곧 Git이라고 생각하곤 합니다. 하지만 이는 사실이 아닙니다. Git은 분산 버전 관리 시스템 그 자체이며, 여러분의 로컬 컴퓨터에 설치되어 명령줄에서 사용하는 도구입니다. GitHub, GitLab, Bitbucket은 Git 저장소를 웹상에서 호스팅하고 관리하며, 협업을 위한 웹 기반 인터페이스와 추가 기능을 제공하는 '서비스'입니다. 마치 웹사이트를 호스팅하는 서버가 웹사이트 그 자체는 아닌 것과 같습니다.</p>
+</blockquote>
+<p>이제 원격 저장소를 여러분의 로컬 Git 저장소와 연결하고 상호작용하는 방법을 배워보겠습니다.</p>
+<h2 id="git-clone">원격 저장소 복제하기: <code>git clone</code></h2>
+<p>새로운 프로젝트에 참여하거나, 기존의 오픈 소스 프로젝트 코드를 가져와서 시작할 때 가장 먼저 해야 할 일은 원격 저장소를 여러분의 로컬 컴퓨터로 복사하는 것입니다. 이 작업을 <strong>복제(Clone)</strong>라고 하며, <code>git clone</code> 명령어를 사용합니다.</p>
+<p><code>git clone</code>은 단순히 파일만 복사하는 것이 아닙니다. 원격 저장소의 <strong>모든 변경 이력(모든 커밋, 브랜치 정보 등)</strong>을 통째로 여러분의 로컬 컴퓨터로 가져와 새로운 로컬 Git 저장소를 생성합니다.</p>
+<pre><code class="language-bash">git clone &lt;원격_저장소_URL&gt; [로컬_디렉토리_이름]
+</code></pre>
+<ul>
+<li><code>&lt;원격_저장소_URL&gt;</code>: 복제할 원격 저장소의 주소입니다. HTTP(S) 또는 SSH 프로토콜을 사용합니다.</li>
+<li><code>[로컬_디렉토리_이름]</code>: (선택 사항) 로컬에 생성될 디렉토리의 이름입니다. 지정하지 않으면 URL에서 저장소 이름을 따서 자동으로 생성됩니다.</li>
+</ul>
+<p><strong>예시: GitHub 저장소 복제하기</strong></p>
+<p>GitHub에 있는 유명한 오픈 소스 프로젝트 중 하나인 <code>Spoon-Knife</code> 저장소를 복제해 봅시다.</p>
+<pre><code class="language-bash">git clone https://github.com/octocat/Spoon-Knife.git
+</code></pre>
+<p>이 명령어를 실행하면 다음과 같은 일들이 일어납니다.</p>
+<ol>
+<li>현재 디렉토리에 <code>Spoon-Knife</code>라는 새로운 디렉토리가 생성됩니다.</li>
+<li><code>https://github.com/octocat/Spoon-Knife.git</code>에 있는 모든 파일과 Git 이력이 <code>Spoon-Knife</code> 디렉토리 안으로 복사됩니다.</li>
+<li>Git은 자동으로 복제된 원격 저장소에 <code>origin</code>이라는 기본 이름을 부여하고 연결합니다.</li>
+<li><code>main</code> (또는 <code>master</code>) 브랜치가 자동으로 체크아웃되어, 프로젝트의 최신 버전으로 작업할 준비가 됩니다.</li>
+</ol>
+<p>이제 <code>cd Spoon-Knife</code> 명령으로 해당 디렉토리로 이동하여 <code>git log</code>나 <code>git status</code> 같은 명령어를 사용해 보세요. 원격 저장소의 모든 이력이 여러분의 로컬 저장소에 그대로 복사되어 있음을 확인할 수 있을 것입니다.</p>
+<h2 id="git-remote">원격 저장소 관리하기: <code>git remote</code></h2>
+<p><code>git clone</code>을 통해 저장소를 복제하면 Git은 자동으로 해당 원격 저장소에 <code>origin</code>이라는 기본 별칭(alias)을 부여합니다. 이 <code>origin</code>은 특별한 의미를 가진 키워드가 아니라, 단지 <code>git clone</code>이 편의상 붙여준 이름일 뿐입니다. 여러분은 이 이름을 변경할 수도 있고, 여러 개의 원격 저장소를 추가할 수도 있습니다. <code>git remote</code> 명령어는 이러한 원격 저장소 목록을 관리하는 데 사용됩니다.</p>
+<h3 id="_2">현재 연결된 원격 저장소 확인하기</h3>
+<p>현재 로컬 저장소에 어떤 원격 저장소들이 연결되어 있는지 확인하려면 <code>git remote -v</code> 명령을 사용합니다. <code>-v</code> (verbose) 옵션은 각 원격 저장소의 URL도 함께 보여줍니다.</p>
+<pre><code class="language-bash">git remote -v
+</code></pre>
+<p><code>Spoon-Knife</code> 저장소를 복제한 후 이 명령을 실행하면 다음과 같은 출력을 볼 수 있습니다.</p>
+<pre><code>origin  https://github.com/octocat/Spoon-Knife.git (fetch)
+origin  https://github.com/octocat/Spoon-Knife.git (push)
+</code></pre>
+<p>이는 <code>origin</code>이라는 이름으로 <code>https://github.com/octocat/Spoon-Knife.git</code> 주소의 원격 저장소가 설정되어 있으며, 이 저장소로부터 변경 사항을 가져오고(fetch) 변경 사항을 보낼 수(push) 있음을 나타냅니다.</p>
+<h3 id="_3">새로운 원격 저장소 추가하기</h3>
+<p>간혹 하나의 로컬 저장소가 여러 원격 저장소와 상호작용해야 할 때가 있습니다. 예를 들어, 오픈 소스 프로젝트에 기여하기 위해 프로젝트를 포크(fork)한 다음, 원래 프로젝트의 저장소를 <code>upstream</code>으로 추가하여 최신 변경 사항을 가져오는 경우가 흔합니다.</p>
+<p>새로운 원격 저장소를 추가하려면 <code>git remote add</code> 명령을 사용합니다.</p>
+<pre><code class="language-bash">git remote add &lt;별칭&gt; &lt;원격_저장소_URL&gt;
+</code></pre>
+<p><strong>예시: <code>upstream</code> 원격 저장소 추가하기</strong></p>
+<p>여러분이 <code>Spoon-Knife</code> 프로젝트를 포크하여 자신의 GitHub 계정에 <code>my-spoon-knife</code>라는 저장소를 만들었다고 가정해 봅시다. 여러분은 <code>origin</code>이라는 이름으로 <code>my-spoon-knife</code>를 사용하고, 원래 <code>octocat/Spoon-Knife</code> 저장소의 변경 사항을 가져오기 위해 <code>upstream</code>으로 추가할 수 있습니다.</p>
+<pre><code class="language-bash"># (Spoon-Knife 저장소가 복제된 상태에서)
+git remote add upstream https://github.com/octocat/Spoon-Knife.git
+</code></pre>
+<p>이제 <code>git remote -v</code>를 다시 실행하면 <code>origin</code>과 <code>upstream</code> 두 개의 원격 저장소가 연결된 것을 확인할 수 있습니다.</p>
+<pre><code class="language-bash">git remote -v
+# 출력 예시:
+# origin  https://github.com/your-username/my-spoon-knife.git (fetch)
+# origin  https://github.com/your-username/my-spoon-knife.git (push)
+# upstream  https://github.com/octocat/Spoon-Knife.git (fetch)
+# upstream  https://github.com/octocat/Spoon-Knife.git (push)
+</code></pre>
+<h3 id="_4">원격 저장소 제거하기</h3>
+<p>더 이상 필요 없는 원격 저장소 연결은 <code>git remote remove</code> 명령으로 제거할 수 있습니다.</p>
+<pre><code class="language-bash">git remote remove &lt;별칭&gt;
+</code></pre>
+<p><strong>예시: <code>upstream</code> 원격 저장소 제거하기</strong></p>
+<pre><code class="language-bash">git remote remove upstream
+</code></pre>
+<p>이제 <code>git remote -v</code>를 실행하면 <code>upstream</code> 원격 저장소가 목록에서 사라진 것을 확인할 수 있습니다.</p>
+<h3 id="_5">원격 저장소 별칭 이름 변경하기</h3>
+<p><code>git remote rename</code> 명령을 사용하여 기존 원격 저장소의 별칭 이름을 변경할 수도 있습니다. 예를 들어, <code>origin</code>이라는 별칭을 <code>main_repo</code>로 바꾸고 싶다면 다음과 같이 사용합니다.</p>
+<pre><code class="language-bash">git remote rename origin main_repo
+</code></pre>
+<h2 id="git-push">변경 사항 공유하기: <code>git push</code></h2>
+<p>로컬 저장소에서 코드를 수정하고 커밋한 후, 이 변경 사항을 다른 팀원들과 공유하려면 원격 저장소로 업로드해야 합니다. 이 작업을 <strong>푸시(Push)</strong>라고 하며, <code>git push</code> 명령을 사용합니다.</p>
+<p><code>git push</code>는 로컬 저장소의 브랜치에 있는 커밋들을 원격 저장소의 해당 브랜치로 전송합니다.</p>
+<h3 id="_6">새로운 프로젝트의 첫 푸시</h3>
+<p>새로운 프로젝트를 시작하고 로컬에서 <code>git init</code>으로 저장소를 초기화한 후, 원격 저장소를 연결하고 첫 커밋을 푸시하는 과정은 다음과 같습니다.</p>
+<ol>
+<li><strong>로컬 저장소 초기화 및 첫 커밋 생성:</strong>
+    <code>bash
+    mkdir my-new-project
+    cd my-new-project
+    git init
+    echo "Initial content" &gt; README.md
+    git add README.md
+    git commit -m "feat: Initial project setup"</code></li>
+<li><strong>원격 저장소 연결:</strong> (GitHub, GitLab 등에서 빈 저장소를 생성한 후 그 URL을 사용합니다.)
+    <code>bash
+    git remote add origin https://github.com/your-username/my-new-project.git</code></li>
+<li><strong>첫 푸시:</strong> 로컬 <code>main</code> 브랜치의 내용을 <code>origin</code> 원격 저장소의 <code>main</code> 브랜치로 푸시합니다. 이때 <code>-u</code> 옵션을 사용하여 로컬 <code>main</code> 브랜치가 원격 <code>origin/main</code> 브랜치를 추적하도록 설정합니다.
+    <code>bash
+    git push -u origin main</code>
+    이후부터는 <code>git push</code>만 입력해도 <code>origin main</code>으로 푸시됩니다.</li>
+</ol>
+<h3 id="_7">기존 프로젝트에서 변경 사항 푸시하기</h3>
+<p>로컬 저장소에서 코드를 수정하고 커밋한 후, 이 변경 사항을 다른 팀원들과 공유하려면 원격 저장소로 업로드해야 합니다.</p>
+<pre><code class="language-bash">git push &lt;원격_저장소_별칭&gt; &lt;로컬_브랜치_이름&gt;
+</code></pre>
+<p><strong>예시: 새로운 기능 브랜치 푸시하기</strong></p>
+<p>여러분이 <code>Spoon-Knife</code> 프로젝트에서 새로운 기능을 개발하기 위해 <code>feature-a</code>라는 브랜치를 만들고 몇 가지 커밋을 했다고 가정해 봅시다.</p>
+<pre><code class="language-bash"># 1. 새로운 브랜치 생성 및 전환
+git checkout -b feature-a
+
+# 2. 코드 수정 (예: index.html 파일 수정)
+echo &quot;&lt;h1&gt;Hello from Feature A!&lt;/h1&gt;&quot; &gt; index.html
+
+# 3. 변경 사항 스테이징 및 커밋
+git add index.html
+git commit -m &quot;feat: Add a new greeting for feature A&quot;
+
+# 4. 원격 저장소로 푸시
+git push origin feature-a
+</code></pre>
+<p>처음으로 새로운 로컬 브랜치를 원격 저장소로 푸시할 때는 Git이 어떤 원격 브랜치와 연결할지 알지 못합니다. 이때 <code>-u</code> (또는 <code>--set-upstream-to</code>) 옵션을 사용하여 로컬 브랜치가 추적할 원격 브랜치를 설정해 줄 수 있습니다.</p>
+<pre><code class="language-bash">git push -u origin feature-a
+</code></pre>
+<p>이 명령은 <code>origin</code> 원격 저장소에 <code>feature-a</code>라는 브랜치를 만들고, 로컬 <code>feature-a</code> 브랜치가 이 원격 <code>feature-a</code> 브랜치를 추적하도록 설정합니다. 이렇게 한 번 설정해두면, 다음부터는 <code>git push</code>만 입력해도 <code>origin feature-a</code>로 푸시됩니다. 또한, 이전에 <code>git push -u origin main</code>과 같이 <code>-u</code> 옵션을 사용하여 로컬 브랜치가 원격 브랜치를 추적하도록 설정했다면, 다음부터는 <code>git pull</code>만 입력해도 자동으로 추적하는 원격 브랜치에서 변경 사항을 가져옵니다.</p>
+<blockquote>
+<p><strong>오해 풀기: <code>git push</code>는 모두를 업데이트한다?</strong>
+<code>git push</code>는 여러분의 로컬 저장소에 있는 변경 사항을 <strong>원격 저장소</strong>로 업로드하는 작업입니다. 다른 팀원들의 로컬 컴퓨터에 있는 저장소를 자동으로 업데이트하지 않습니다. 다른 팀원들은 여러분이 푸시한 변경 사항을 각자 <code>git pull</code> 또는 <code>git fetch</code> 명령을 사용하여 가져가야 합니다.</p>
+</blockquote>
+<h3 id="_8">원격 브랜치 삭제하기</h3>
+<p>기능 개발이 완료되어 <code>main</code> 브랜치에 병합된 후에는 더 이상 필요 없는 원격 브랜치를 삭제할 수 있습니다.</p>
+<pre><code class="language-bash">git push &lt;원격_저장소_별칭&gt; --delete &lt;원격_브랜치_이름&gt;
+</code></pre>
+<p><strong>예시: <code>feature-a</code> 원격 브랜치 삭제하기</strong></p>
+<pre><code class="language-bash">git push origin --delete feature-a
+</code></pre>
+<h2 id="git-fetch-git-pull">다른 사람의 변경 사항 가져오기: <code>git fetch</code>와 <code>git pull</code></h2>
+<p>여러분만 코드를 변경하는 것이 아니라, 다른 팀원들도 원격 저장소에 코드를 푸시할 것입니다. 여러분의 로컬 저장소를 최신 상태로 유지하려면 이 변경 사항들을 가져와야 합니다. 이때 <code>git fetch</code>와 <code>git pull</code>이라는 두 가지 명령어를 사용합니다. 이 둘은 비슷해 보이지만 중요한 차이점이 있습니다.</p>
+<h3 id="git-fetch"><code>git fetch</code>: 원격 저장소의 변경 사항만 가져오기</h3>
+<p><code>git fetch</code>는 원격 저장소의 모든 변경 이력(커밋, 브랜치 정보)을 로컬로 다운로드하지만, 여러분의 <strong>로컬 작업 브랜치에 자동으로 병합하지는 않습니다.</strong> 대신, 원격 저장소의 브랜치 상태를 반영하는 <strong>원격 추적 브랜치(Remote-tracking branch)</strong>를 업데이트합니다.</p>
+<p>원격 추적 브랜치는 로컬 브랜치와는 다른 특별한 참조입니다. 예를 들어, <code>origin/main</code>은 <code>origin</code>이라는 원격 저장소의 <code>main</code> 브랜치가 현재 어떤 상태인지 보여주는 여러분의 로컬 저장소 내의 '읽기 전용' 복사본입니다.</p>
+<pre><code class="language-bash">git fetch &lt;원격_저장소_별칭&gt;
+</code></pre>
+<p><strong>예시: <code>origin</code>에서 변경 사항 가져오기</strong></p>
+<pre><code class="language-bash">git fetch origin
+</code></pre>
+<p>이 명령을 실행하면 <code>origin</code> 원격 저장소에 있는 모든 브랜치의 최신 커밋 정보가 <code>origin/main</code>, <code>origin/feature-b</code> 등과 같은 원격 추적 브랜치로 업데이트됩니다.</p>
+<p><code>git fetch</code> 후에는 <code>git log main..origin/main</code> 명령 등으로 로컬 <code>main</code> 브랜치와 원격 추적 브랜치 <code>origin/main</code> 간의 차이를 확인하거나, <code>git diff main origin/main</code>으로 구체적인 변경 내용을 살펴볼 수 있습니다.</p>
+<p>변경 사항을 확인한 후, 로컬 브랜치에 병합하려면 <code>git merge</code> 명령을 사용합니다.</p>
+<pre><code class="language-bash">git merge origin/main
+</code></pre>
+<p>이렇게 하면 <code>origin/main</code>이 가리키는 커밋이 현재 로컬 브랜치(<code>main</code>)로 병합됩니다.</p>
+<h3 id="git-pull"><code>git pull</code>: 가져오기 + 병합</h3>
+<p><code>git pull</code>은 <code>git fetch</code>와 <code>git merge</code>를 결합한 편리한 명령어입니다. 원격 저장소의 변경 사항을 가져와서 <strong>현재 로컬 브랜치에 자동으로 병합까지 수행</strong>합니다.</p>
+<pre><code class="language-bash">git pull &lt;원격_저장소_별칭&gt; &lt;원격_브랜치_이름&gt;
+</code></pre>
+<p><strong>예시: <code>origin/main</code> 브랜치 가져와 병합하기</strong></p>
+<pre><code class="language-bash">git pull origin main
+</code></pre>
+<p>이 명령은 <code>origin</code> 원격 저장소의 <code>main</code> 브랜치에서 변경 사항을 가져와 여러분의 현재 로컬 브랜치로 병합합니다. 만약 로컬 브랜치가 특정 원격 브랜치를 추적하고 있다면, <code>git pull</code>만 입력해도 자동으로 해당 원격 브랜치에서 변경 사항을 가져옵니다.</p>
+<blockquote>
+<p><strong>오해 풀기: <code>git fetch</code>와 <code>git pull</code>은 같다?</strong>
+가장 흔한 오해 중 하나입니다.
+*   <code>git fetch</code>: 원격 저장소의 변경 사항을 로컬로 <strong>가져오기만</strong> 합니다. 로컬 작업 브랜치를 건드리지 않고, 원격 추적 브랜치만 업데이트합니다. 이를 통해 변경 사항을 안전하게 검토한 후 수동으로 병합할 수 있습니다.
+*   <code>git pull</code>: <code>git fetch</code>를 수행한 다음, 자동으로 로컬 브랜치에 <strong>병합(merge)까지</strong> 수행합니다. 편리하지만, 어떤 변경 사항이 오는지 미리 확인하지 못하고 바로 병합되기 때문에 충돌(conflict)이 발생할 경우 즉시 해결해야 합니다.</p>
+<p>일반적으로 <code>git fetch</code>는 변경 사항을 먼저 확인하고 싶을 때, <code>git pull</code>은 변경 사항을 바로 적용하고 싶을 때 사용합니다. 협업 시에는 <code>git fetch</code>로 변경 사항을 확인한 후 신중하게 병합하는 것이 더 안전할 수 있습니다.</p>
+</blockquote>
+<h2 id="originmain">원격 추적 브랜치 (<code>origin/main</code>) 이해하기</h2>
+<p>앞서 언급했듯이, <code>git fetch</code> 명령을 실행하면 <code>origin/main</code>과 같은 <strong>원격 추적 브랜치</strong>가 업데이트됩니다. 이는 <code>origin</code> 원격 저장소의 <code>main</code> 브랜치가 마지막으로 <code>fetch</code>했을 때 어떤 커밋을 가리키고 있었는지를 보여주는 <strong>로컬 참조</strong>입니다.</p>
+<ul>
+<li><strong>로컬 브랜치 (예: <code>main</code>)</strong>: 여러분이 직접 작업하고 커밋을 생성하는 브랜치입니다.</li>
+<li><strong>원격 추적 브랜치 (예: <code>origin/main</code>)</strong>: 원격 저장소에 있는 브랜치의 상태를 반영하는 여러분의 로컬 저장소 내의 '읽기 전용' 포인터입니다. 여러분이 직접 이 브랜치로 체크아웃하여 작업할 수는 없습니다.</li>
+</ul>
+<p><code>git branch -r</code> 명령으로 원격 추적 브랜치 목록을 확인할 수 있습니다.</p>
+<p><code>git log</code> 명령으로 <code>main</code>과 <code>origin/main</code>의 차이를 시각적으로 확인해 보세요.</p>
+<pre><code class="language-bash">git log --oneline --decorate --graph --all
+</code></pre>
+<p>이 명령은 모든 브랜치(로컬 및 원격 추적)의 커밋 이력을 그래프 형태로 보여주어, 어떤 브랜치가 어떤 커밋을 가리키고 있는지 명확하게 이해하는 데 도움이 됩니다.</p>
+<h2 id="_9">기본적인 협업 워크플로우</h2>
+<p>이제 <code>git clone</code>, <code>git remote</code>, <code>git push</code>, <code>git fetch</code>, <code>git pull</code> 명령어를 모두 살펴보았습니다. 이들을 조합하여 일반적인 팀 협업 워크플로우를 구성할 수 있습니다.</p>
+<ol>
+<li>
+<p><strong>프로젝트 시작:</strong></p>
+<ul>
+<li>새로운 프로젝트라면 원격 저장소를 생성하고 <code>git init</code> 후 첫 커밋을 푸시합니다. (<code>git push -u origin main</code> 참고)</li>
+<li>기존 프로젝트라면 <code>git clone &lt;원격_저장소_URL&gt;</code>로 로컬 저장소를 복제합니다.</li>
+</ul>
+</li>
+<li>
+<p><strong>최신 변경 사항 가져오기:</strong></p>
+<ul>
+<li>작업을 시작하기 전에 항상 <code>git pull origin main</code> (또는 <code>git fetch</code> 후 <code>git merge</code>)을 사용하여 원격 저장소의 최신 변경 사항을 로컬로 가져옵니다. 이는 충돌을 최소화하고 항상 최신 코드 베이스에서 작업하기 위함입니다.</li>
+</ul>
+</li>
+<li>
+<p><strong>기능 브랜치 생성 및 작업:</strong></p>
+<ul>
+<li><code>main</code> 브랜치에서 직접 작업하는 대신, <code>git checkout -b feature/my-new-feature</code>와 같이 새로운 기능 브랜치를 생성하여 작업합니다.</li>
+<li>코드를 수정하고, <code>git add</code> 및 <code>git commit</code>으로 변경 사항을 저장합니다.</li>
+</ul>
+</li>
+<li>
+<p><strong>원격 저장소로 푸시:</strong></p>
+<ul>
+<li>작업이 어느 정도 진행되거나 하루 작업을 마칠 때마다 <code>git push origin feature/my-new-feature</code> 명령으로 로컬 브랜치의 변경 사항을 원격 저장소로 푸시합니다. 이는 작업 백업의 역할도 합니다.</li>
+</ul>
+</li>
+<li>
+<p><strong>코드 리뷰 및 병합 (Pull Request/Merge Request):</strong></p>
+<ul>
+<li>기능 개발이 완료되면, GitHub/GitLab/Bitbucket과 같은 Git 호스팅 서비스 웹 인터페이스에서 <strong>Pull Request (PR)</strong> 또는 <strong>Merge Request (MR)</strong>를 생성합니다.</li>
+<li>PR/MR은 여러분의 <code>feature/my-new-feature</code> 브랜치의 변경 사항을 <code>main</code> 브랜치로 병합해 달라고 요청하는 것입니다.</li>
+<li>팀원들은 PR/MR을 통해 여러분의 코드를 검토하고 피드백을 제공합니다.</li>
+<li>필요한 수정 사항을 반영하여 다시 푸시하면 PR/MR에 자동으로 업데이트됩니다.</li>
+<li>모든 검토가 완료되면, PR/MR을 승인하고 <code>main</code> 브랜치로 병합합니다. (이 과정은 주로 웹 인터페이스에서 이루어집니다.)</li>
+</ul>
+</li>
+<li>
+<p><strong>브랜치 정리:</strong></p>
+<ul>
+<li><code>main</code> 브랜치에 성공적으로 병합된 후에는 더 이상 필요 없는 기능 브랜치를 로컬과 원격에서 삭제합니다.<ul>
+<li>로컬 브랜치 삭제: <code>git branch -d feature/my-new-feature</code></li>
+<li>원격 브랜치 삭제: <code>git push origin --delete feature/my-new-feature</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<p>이 워크플로우는 Git을 활용한 현대적인 소프트웨어 개발 팀에서 가장 일반적으로 사용되는 방법입니다.</p>
+<h2 id="_10">요약 및 다음 단계</h2>
+<p>이번 장에서는 Git을 사용한 협업의 핵심인 원격 저장소에 대해 깊이 있게 다루었습니다.</p>
+<ul>
+<li><strong>원격 저장소</strong>는 팀원들이 코드를 공유하고 협업할 수 있는 네트워크상의 Git 저장소입니다.</li>
+<li><code>git clone</code> 명령으로 원격 저장소의 전체 이력을 로컬로 복사하여 새 로컬 저장소를 만듭니다.</li>
+<li><code>git remote</code> 명령으로 연결된 원격 저장소 목록을 확인하고, 추가하거나 제거할 수 있으며, 별칭 이름을 변경할 수도 있습니다. <code>origin</code>은 <code>git clone</code> 시 자동으로 부여되는 기본 별칭입니다.</li>
+<li><code>git push</code> 명령으로 로컬 커밋을 원격 저장소로 업로드하여 다른 사람들과 공유합니다. 이때 <code>-u</code> 옵션을 사용하면 로컬 브랜치와 원격 브랜치 간의 추적 관계를 설정하여 이후 <code>git pull</code>을 더 편리하게 사용할 수 있습니다.</li>
+<li><code>git fetch</code> 명령은 원격 저장소의 변경 이력을 로컬로 가져오지만, 자동으로 병합하지는 않습니다. <code>origin/main</code>과 같은 <strong>원격 추적 브랜치</strong>를 업데이트합니다.</li>
+<li><code>git pull</code> 명령은 <code>git fetch</code>와 <code>git merge</code>를 결합하여 원격 변경 사항을 가져오고 로컬 브랜치에 자동으로 병합합니다.</li>
+<li>GitHub, GitLab, Bitbucket과 같은 서비스들은 Git 원격 저장소를 호스팅하고, Pull Request와 같은 협업 도구를 제공합니다.</li>
+</ul>
+<p>이제 여러분은 로컬 Git 저장소에서 벗어나 팀원들과 함께 코드를 주고받으며 프로젝트를 발전시킬 수 있는 기본기를 갖추게 되었습니다. 하지만 협업 과정에서 항상 순조롭게만 진행되는 것은 아닙니다. 여러 사람이 같은 파일을 동시에 수정했을 때 발생하는 <strong>충돌(Conflict)</strong>은 Git 협업의 피할 수 없는 부분입니다. 다음 장에서는 이러한 충돌을 효율적으로 해결하고, Git의 강력한 기능을 활용하여 더욱 깔끔한 커밋 이력을 유지하는 고급 병합 및 리베이스 전략에 대해 자세히 알아보겠습니다.</p>
+<hr />
+<h3 id="_11">실습: 원격 저장소와 상호작용하기</h3>
+<ol>
+<li><strong>새로운 로컬 저장소 생성 및 초기 커밋:</strong>
+    <code>bash
+    mkdir my-collaboration-project
+    cd my-collaboration-project
+    git init
+    echo "Hello, Git collaboration!" &gt; README.md
+    git add README.md
+    git commit -m "Initial commit for collaboration project"</code></li>
+<li><strong>원격 저장소 추가 및 첫 푸시 (실제로는 여러분의 GitHub 등에서 생성한 빈 저장소 URL을 사용합니다):</strong><ul>
+<li>먼저 GitHub, GitLab, Bitbucket 등에서 <code>my-collaboration-project</code>라는 이름의 <strong>빈 원격 저장소</strong>를 생성합니다. (README.md, .gitignore, license 파일 등을 추가하지 않은 상태로)</li>
+<li>생성된 원격 저장소의 URL을 복사하여 다음 명령을 실행합니다.
+```bash</li>
+</ul>
+<h1 id="url-httpsgithubcomyour-usernamemy-collaboration-projectgit">예시 URL: https://github.com/your-username/my-collaboration-project.git</h1>
+<p>git remote add origin &lt;여러분의_원격_저장소_URL&gt;
+git push -u origin main
+<code>``
+(이 단계에서</code>fatal: repository '...' not found<code>오류가 발생한다면, 실제 존재하는 원격 저장소 URL로</code>git remote set-url origin &lt;새로운_URL&gt;` 명령을 사용하여 URL을 변경한 후 다시 시도하세요.)</p>
+</li>
+<li><strong>원격 저장소 목록 확인:</strong>
+    <code>bash
+    git remote -v</code></li>
+<li><strong>새로운 브랜치에서 작업 후 푸시:</strong>
+    <code>bash
+    git checkout -b feature/add-new-file
+    echo "This is a new feature file." &gt; feature.txt
+    git add feature.txt
+    git commit -m "feat: Add feature file"
+    git push -u origin feature/add-new-file</code></li>
+<li><strong><code>git fetch</code>와 <code>git pull</code>의 차이점 이해하기:</strong><ul>
+<li><strong>다른 터미널</strong>을 열거나, <strong>새로운 디렉토리</strong>에 <code>my-collaboration-project</code>를 다시 복제합니다. (이것을 '다른 팀원의 컴퓨터'라고 가정합니다.)
+    <code>bash
+    cd ..
+    git clone &lt;여러분의_원격_저장소_URL&gt; my-collaboration-project-clone
+    cd my-collaboration-project-clone</code></li>
+<li><strong>원래 터미널</strong>(<code>my-collaboration-project</code> 디렉토리)에서 <code>main</code> 브랜치로 돌아가 새로운 커밋을 만들고 푸시합니다.
+    <code>bash
+    git checkout main
+    echo "Updated main branch." &gt;&gt; README.md
+    git add README.md
+    git commit -m "docs: Update README on main"
+    git push origin main</code></li>
+<li><strong>두 번째 터미널</strong>(<code>my-collaboration-project-clone</code> 디렉토리)에서 <code>git fetch origin</code>을 실행해 보세요. 어떤 변화가 있는지 <code>git status</code>나 <code>git log --oneline --decorate --graph --all</code>로 확인합니다. (<code>origin/main</code>이 업데이트되었지만, 로컬 <code>main</code>은 그대로일 것입니다.)</li>
+<li><code>git merge origin/main</code>을 실행하여 변경 사항을 로컬 <code>main</code> 브랜치에 병합해 보세요.</li>
+<li>이제 다시 <strong>원래 터미널</strong>에서 새로운 커밋을 만들고 푸시합니다.
+    <code>bash
+    git checkout main
+    echo "Another update." &gt;&gt; README.md
+    git add README.md
+    git commit -m "docs: Another update on main"
+    git push origin main</code></li>
+<li><strong>두 번째 터미널</strong>에서 <code>git pull origin main</code>을 실행해 보세요. <code>fetch</code>와 <code>merge</code>가 한 번에 일어나는 것을 확인합니다.</li>
+</ul>
+</li>
+</ol>
+<h3 id="_12">숙고해 볼 점:</h3>
+<ul>
+<li><code>git fetch</code> 후 <code>git merge</code>를 사용하는 것과 <code>git pull</code>을 사용하는 것의 장단점은 무엇일까요?</li>
+<li>팀 프로젝트에서 <code>origin</code> 외에 다른 원격 저장소(<code>upstream</code> 등)를 사용하는 경우는 어떤 상황일까요?</li>
+<li><code>git push</code> 시 <code>-u</code> 옵션을 사용하는 것이 왜 편리할까요?</li>
+</ul>
+
+            <nav class="chapter-nav">
+                
+                
+                
+                
+                
+                    
+                    
+                
+                    
+                    
+                
+                    
+                    
+                
+                    
+                    
+                
+                    
+                    
+                
+                    
+                    
+                
+                    
+                    
+                
+                
+                    <a href="chapter-05.html">&larr; 이전 챕터</a>
+                
+                
+                    <a href="chapter-07.html">다음 챕터 &rarr;</a>
+                
+            </nav>
+        </article>
+    </div>
+</body>
+</html>

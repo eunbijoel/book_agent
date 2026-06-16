@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5. 브랜치와 병합: Git의 핵심 - Git 기초</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: "Noto Sans KR", system-ui, sans-serif; background: #fff; color: #333; }
+        .layout { display: flex; min-height: 100vh; }
+        .sidebar { width: 260px; background: #f8f9fa; border-right: 1px solid #e0e0e0; padding: 1.5rem; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+        .sidebar h3 { font-size: 1rem; margin-bottom: 1rem; }
+        .sidebar h3 a { color: #1a1a2e; text-decoration: none; }
+        .sidebar ul { list-style: none; }
+        .sidebar li { margin-bottom: 0.4rem; }
+        .sidebar a { color: #555; text-decoration: none; font-size: 0.9rem; display: block; padding: 0.3rem 0.5rem; border-radius: 4px; }
+        .sidebar a:hover { background: #e8e8e8; }
+        .sidebar a.active { background: #1a1a2e; color: #fff; }
+        .sidebar .back { margin-top: 1.5rem; font-size: 0.85rem; }
+        .content { flex: 1; padding: 2rem 3rem; max-width: 800px; }
+        .content h1 { font-size: 1.8rem; margin-bottom: 1rem; border-bottom: 2px solid #e0e0e0; padding-bottom: 0.5rem; }
+        .content h2 { font-size: 1.4rem; margin-top: 2rem; margin-bottom: 0.8rem; }
+        .content h3 { font-size: 1.15rem; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+        .content p { line-height: 1.8; margin-bottom: 1rem; }
+        .content ul, .content ol { margin: 1rem 0 1rem 2rem; line-height: 1.8; }
+        .content blockquote { border-left: 4px solid #e94560; padding-left: 1rem; margin: 1rem 0; color: #666; }
+        .content code { background: #f0f0f0; padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.9em; }
+        .content pre { background: #1a1a2e; color: #e0e0e0; padding: 1rem; border-radius: 8px; overflow-x: auto; margin: 1rem 0; }
+        .content pre code { background: none; padding: 0; }
+        .chapter-nav { display: flex; justify-content: space-between; margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #e0e0e0; }
+        .chapter-nav a { color: #1a1a2e; text-decoration: none; }
+        .chapter-nav a:hover { color: #e94560; }
+        @media (max-width: 768px) {
+            .layout { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; position: static; }
+            .content { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <nav class="sidebar">
+            <h3><a href="../index.html">Git 기초</a></h3>
+            <ul>
+                
+                <li>
+                    <a href="chapter-01.html"
+                       >
+                        1. 1장: 버전 관리와 Git의 이해
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="chapter-02.html"
+                       >
+                        2. 2장. Git 설치 및 기본 설정: 버전 관리의 첫걸음
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="chapter-03.html"
+                       >
+                        3. 3장: 로컬 저장소 시작하기: 커밋의 기본
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="chapter-04.html"
+                       >
+                        4. 4장: 변경 이력 탐색 및 관리
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="chapter-05.html"
+                       class="active">
+                        5. 5. 브랜치와 병합: Git의 핵심
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="chapter-06.html"
+                       >
+                        6. 6장: 원격 저장소와 협업: 함께 코드를 만들다
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="chapter-07.html"
+                       >
+                        7. 1. 파일 수정
+                    </a>
+                </li>
+                
+            </ul>
+            <div class="back">
+                <a href="../index.html">&larr; 도서관으로</a>
+            </div>
+        </nav>
+
+        <article class="content">
+            <h1 id="5-git">5. 브랜치와 병합: Git의 핵심</h1>
+<p>상상해보세요. 여러분은 중요한 프로젝트의 핵심 기능을 개발하고 있습니다. 그런데 갑자기 새로운 긴급 버그를 수정해야 하거나, 아직 확정되지 않은 실험적인 기능을 추가해보고 싶습니다. 이럴 때, 현재 작업하던 코드를 망가뜨리지 않으면서 동시에 여러 작업을 독립적으로 진행할 수 있다면 얼마나 좋을까요? Git은 바로 이런 상황을 위해 '브랜치(Branch)'라는 강력한 개념을 제공합니다.</p>
+<p>다른 버전 관리 시스템에서는 브랜치가 저장소의 무거운 복사본으로 여겨져 생성과 전환에 많은 시간과 자원이 소모되곤 했습니다. 하지만 Git의 브랜치는 마치 마법처럼 가볍고 빠릅니다. 이는 Git이 개발자들에게 제공하는 가장 혁신적이고 핵심적인 기능 중 하나이며, 병렬 개발과 자유로운 실험을 가능하게 하여 개발 생산성을 극대화합니다. 이번 장에서는 Git 브랜치의 개념을 깊이 이해하고, 브랜치를 생성하고 전환하며, 서로 다른 브랜치의 변경 사항을 '병합(Merge)'하는 방법을 배울 것입니다. 또한, 불가피하게 발생할 수 있는 '병합 충돌(Merge Conflict)'을 해결하는 실용적인 방법까지 함께 익혀 Git의 진정한 힘을 경험해봅시다.</p>
+<hr />
+<h2 id="branch">브랜치(Branch)란 무엇인가?</h2>
+<p>Git에서 브랜치는 특정 커밋(Commit)을 가리키는 가볍고 이동 가능한 '포인터(Pointer)'에 불과합니다. 지난 장에서 커밋이 프로젝트의 특정 시점 스냅샷을 기록한다고 배웠죠? 브랜치는 바로 이 커밋 중 하나를 가리키며, 우리가 새로운 커밋을 생성할 때마다 해당 브랜치 포인터는 자동으로 최신 커밋으로 이동합니다.</p>
+<p>Git 저장소를 처음 초기화하고 첫 커밋을 생성하면, 기본적으로 <code>main</code> (또는 <code>master</code>)이라는 이름의 브랜치가 생성되어 이 첫 커밋을 가리킵니다. 이후 모든 작업은 이 <code>main</code> 브랜치 위에서 진행됩니다.</p>
+<p><strong>왜 브랜치가 중요할까요?</strong></p>
+<ul>
+<li><strong>독립적인 작업 공간:</strong> 각 브랜치는 서로에게 영향을 주지 않는 독립적인 작업 공간을 제공합니다. 이는 메인 코드베이스를 안정적으로 유지하면서 새로운 기능 개발, 버그 수정, 실험 등을 자유롭게 진행할 수 있게 합니다.</li>
+<li><strong>병렬 개발:</strong> 여러 개발자가 동시에 각자의 브랜치에서 작업한 후, 나중에 이 변경 사항들을 <code>main</code> 브랜치로 통합할 수 있습니다. 이는 개발 속도를 크게 향상시킵니다.</li>
+<li><strong>안정적인 코드 관리:</strong> 핵심 기능을 담당하는 <code>main</code> 브랜치는 항상 배포 가능한 상태로 유지하고, 모든 개발은 별도의 브랜치에서 이루어지도록 강제할 수 있습니다.</li>
+<li><strong>실험의 자유:</strong> 새로운 아이디어나 위험한 변경 사항을 <code>실험용 브랜치</code>에서 마음껏 시도해보고, 결과가 좋지 않으면 해당 브랜치를 삭제하면 됩니다. <code>main</code> 브랜치에는 아무런 영향을 주지 않습니다.</li>
+</ul>
+<p><strong>오해: 브랜치는 저장소의 복사본이 아닙니다!</strong></p>
+<p>많은 초보자들이 Git 브랜치를 만들면 전체 저장소의 파일들이 복사된다고 생각합니다. 하지만 이는 오해입니다. Git 브랜치는 단지 '어떤 커밋'을 가리키는지에 대한 정보만 가지고 있을 뿐입니다. 이 때문에 브랜치를 생성하고 전환하는 것이 매우 빠르고 효율적입니다.</p>
+<hr />
+<h2 id="_1">브랜치 다루기: 생성, 전환, 삭제</h2>
+<p>이제 Git 브랜치를 직접 다루는 방법을 배워봅시다.</p>
+<h3 id="1-git-branch">1. 브랜치 목록 조회하기: <code>git branch</code></h3>
+<p>현재 저장소에 존재하는 브랜치 목록을 확인하려면 <code>git branch</code> 명령을 사용합니다.</p>
+<pre><code class="language-bash">git branch
+</code></pre>
+<p><strong>실습:</strong>
+새로운 Git 저장소를 초기화하고 첫 커밋을 만들어봅시다.</p>
+<ol>
+<li>새 디렉터리를 만들고 이동합니다.
+    <code>bash
+    mkdir git-branch-example
+    cd git-branch-example</code></li>
+<li>Git 저장소를 초기화합니다.
+    <code>bash
+    git init</code></li>
+<li><code>index.html</code> 파일을 생성하고 내용을 추가합니다.
+    <code>bash
+    echo "&lt;h1&gt;Welcome to My Website&lt;/h1&gt;" &gt; index.html</code></li>
+<li>첫 커밋을 생성합니다.
+    <code>bash
+    git add index.html
+    git commit -m "Initial commit: Add basic index.html"</code></li>
+<li>이제 브랜치 목록을 확인해봅니다.
+    <code>bash
+    git branch</code>
+    출력 결과는 다음과 비슷할 것입니다.
+    ```<ul>
+<li>main
+<code>``</code>*<code>표시는 현재 작업 중인 브랜치가</code>main`임을 나타냅니다.</li>
+</ul>
+</li>
+</ol>
+<h3 id="2-git-branch-">2. 새로운 브랜치 생성하기: <code>git branch &lt;새-브랜치-이름&gt;</code></h3>
+<p>새로운 브랜치를 생성하는 것은 매우 간단합니다. <code>git branch</code> 명령어 뒤에 원하는 브랜치 이름을 붙여주면 됩니다.</p>
+<pre><code class="language-bash">git branch feature/login
+</code></pre>
+<p>이 명령은 <code>feature/login</code>이라는 새 브랜치를 생성합니다. 하지만 아직 이 브랜치로 이동한 것은 아닙니다. 현재 브랜치는 여전히 <code>main</code>입니다.</p>
+<p>다시 <code>git branch</code>를 실행하여 확인해보세요.</p>
+<pre><code class="language-bash">git branch
+</code></pre>
+<pre><code>  feature/login
+* main
+</code></pre>
+<p>이제 <code>feature/login</code> 브랜치가 목록에 추가되었지만, <code>*</code>는 여전히 <code>main</code> 옆에 있습니다.</p>
+<h3 id="3-git-switch-git-checkout">3. 브랜치 전환하기: <code>git switch</code> 또는 <code>git checkout</code></h3>
+<p>새로운 브랜치를 만들었으니, 이제 그 브랜치로 이동하여 작업을 시작해야 합니다. 브랜치를 전환하는 명령어는 두 가지가 있습니다: <code>git checkout</code>과 <code>git switch</code>.</p>
+<ul>
+<li><code>git checkout</code>: Git의 초기부터 사용되던 다목적 명령어입니다. 브랜치 전환 외에도 파일을 복원하거나 커밋을 확인하는 등 다양한 용도로 사용됩니다.</li>
+<li><code>git switch</code>: Git 2.23 버전부터 도입된 명령어입니다. <code>git checkout</code>의 기능 중 '브랜치 전환'에 특화되어 더 명확하고 안전하게 브랜치를 다룰 수 있도록 설계되었습니다. 특히 <code>git checkout</code>이 파일 복원과 브랜치 전환이라는 두 가지 중요한 기능을 혼용하여 초보자에게 혼란을 줄 수 있었기 때문에, <code>git switch</code>는 브랜치 전환의 의도를 명확히 합니다.</li>
+</ul>
+<p>이 책에서는 <code>git switch</code>를 주로 사용하겠지만, <code>git checkout</code>도 여전히 널리 사용되므로 함께 알아두는 것이 좋습니다.</p>
+<p><strong><code>git switch &lt;전환할-브랜치-이름&gt;</code></strong></p>
+<pre><code class="language-bash">git switch feature/login
+</code></pre>
+<pre><code>Switched to branch 'feature/login'
+</code></pre>
+<p>이제 <code>feature/login</code> 브랜치로 전환되었습니다. 다시 <code>git branch</code>를 실행하면 <code>*</code>가 <code>feature/login</code> 옆으로 이동한 것을 볼 수 있습니다.</p>
+<p><strong><code>git checkout -b &lt;새-브랜치-이름&gt;</code> / <code>git switch -c &lt;새-브랜치-이름&gt;</code></strong></p>
+<p>자주 사용하는 패턴 중 하나는 새로운 브랜치를 만들고 즉시 그 브랜치로 전환하는 것입니다. 이를 한 번의 명령으로 처리할 수 있습니다.</p>
+<ul>
+<li><code>git checkout -b &lt;새-브랜치-이름&gt;</code></li>
+<li><code>git switch -c &lt;새-브랜치-이름&gt;</code></li>
+</ul>
+<p><strong>실습: <code>feature/login</code> 브랜치에서 작업하기</strong></p>
+<ol>
+<li><code>feature/login</code> 브랜치로 전환합니다. (이미 전환했다면 건너뛰세요)
+    <code>bash
+    git switch feature/login</code></li>
+<li><code>login.html</code> 파일을 생성하고 내용을 추가합니다.
+    <code>bash
+    echo "&lt;h2&gt;Login Page&lt;/h2&gt;&lt;form&gt;...&lt;/form&gt;" &gt; login.html</code></li>
+<li>변경 사항을 커밋합니다.
+    <code>bash
+    git add login.html
+    git commit -m "feat: Add login page"</code></li>
+<li>이제 <code>main</code> 브랜치로 다시 돌아가 봅시다.
+    <code>bash
+    git switch main</code>
+    <code>main</code> 브랜치로 돌아오면 <code>login.html</code> 파일이 사라진 것을 확인할 수 있습니다. 이는 <code>login.html</code> 파일이 <code>feature/login</code> 브랜치에서만 추가되었고, <code>main</code> 브랜치에는 아직 그 변경 사항이 없기 때문입니다. Git은 브랜치를 전환할 때 작업 디렉터리의 파일을 해당 브랜치의 최신 커밋 상태로 업데이트합니다.</li>
+</ol>
+<h3 id="4-git-branch-d-">4. 브랜치 삭제하기: <code>git branch -d &lt;삭제할-브랜치-이름&gt;</code></h3>
+<p>작업이 완료되어 다른 브랜치로 병합된 브랜치는 더 이상 필요 없을 때 삭제할 수 있습니다.</p>
+<pre><code class="language-bash">git branch -d feature/login
+</code></pre>
+<p><code>feature/login</code> 브랜치를 <code>main</code> 브랜치로 병합하지 않은 상태에서 이 명령을 실행하면 Git은 경고 메시지를 표시하며 삭제를 거부할 것입니다. 이는 실수로 아직 병합되지 않은 중요한 작업을 잃는 것을 방지하기 위함입니다.</p>
+<pre><code>error: The branch 'feature/login' is not fully merged.
+If you are sure you want to delete it, run 'git branch -D feature/login'.
+</code></pre>
+<p>만약 브랜치의 변경 사항이 아직 병합되지 않았음에도 불구하고 강제로 삭제하고 싶다면, <code>-d</code> 대신 <code>-D</code> 옵션을 사용합니다. (대문자 D)</p>
+<pre><code class="language-bash">git branch -D feature/login # 주의: 병합되지 않은 변경 사항이 영구히 사라질 수 있습니다.
+</code></pre>
+<p><strong>오해: 브랜치 삭제가 커밋 삭제를 의미하지 않습니다.</strong>
+브랜치를 삭제하더라도 해당 브랜치에서 이루어졌던 커밋 자체는 Git 저장소 내에 남아있습니다. 단지 그 커밋을 가리키던 '포인터'만 사라지는 것입니다. 만약 어떤 브랜치도 해당 커밋을 가리키지 않게 되면, Git의 가비지 컬렉션(garbage collection)에 의해 나중에 정리될 수 있습니다.</p>
+<hr />
+<h2 id="git-log-graph-oneline-all">변경 이력 시각화하기: <code>git log --graph --oneline --all</code></h2>
+<p>지금까지 브랜치를 만들고 전환하며 커밋을 생성했습니다. 이 모든 과정을 <code>git log</code> 명령어를 통해 시각적으로 확인하는 것은 Git의 동작 방식을 이해하는 데 매우 중요합니다.</p>
+<pre><code class="language-bash">git log --graph --oneline --all
+</code></pre>
+<ul>
+<li><code>--graph</code>: 브랜치와 병합 이력을 ASCII 그래프로 보여줍니다.</li>
+<li><code>--oneline</code>: 각 커밋을 한 줄로 간결하게 표시합니다.</li>
+<li><code>--all</code>: 모든 브랜치(현재 브랜치뿐만 아니라)의 이력을 보여줍니다.</li>
+</ul>
+<p><strong>실습:</strong>
+이전 단계에서 <code>feature/login</code> 브랜치를 만들고 커밋한 후 <code>main</code>으로 돌아온 상태에서 이 명령어를 실행해보세요.</p>
+<pre><code class="language-bash">git log --graph --oneline --all
+</code></pre>
+<pre><code>* b1b1b1b (feature/login) feat: Add login page
+* a0a0a0a (HEAD -&gt; main) Initial commit: Add basic index.html
+</code></pre>
+<p>이 출력은 <code>main</code> 브랜치가 <code>a0a0a0a</code> 커밋을 가리키고, <code>feature/login</code> 브랜치가 <code>b1b1b1b</code> 커밋을 가리키며, 두 브랜치 이력이 분기되어 있음을 보여줍니다.</p>
+<hr />
+<h2 id="git-merge">브랜치 병합하기: <code>git merge</code></h2>
+<p>독립적인 브랜치에서 작업을 마쳤다면, 이제 그 변경 사항을 다른 브랜치(주로 <code>main</code> 브랜치)로 통합해야 합니다. 이 과정을 '병합(Merge)'이라고 하며, <code>git merge</code> 명령어를 사용합니다.</p>
+<p><code>git merge</code>는 현재 작업 중인 브랜치(HEAD가 가리키는 브랜치)로 다른 브랜치의 변경 사항을 가져옵니다.</p>
+<pre><code class="language-bash">git switch main           # 병합할 대상 브랜치로 이동
+git merge feature/login   # feature/login 브랜치의 변경 사항을 main으로 병합
+</code></pre>
+<p>Git은 두 브랜치의 변경 이력을 비교하여 변경 사항을 통합합니다. 이때 두 가지 주요 병합 방식이 있습니다.</p>
+<h3 id="1-fast-forward-merge">1. Fast-forward Merge (빨리 감기 병합)</h3>
+<p>가장 간단한 병합 방식입니다. 만약 병합하려는 대상 브랜치(예: <code>main</code>)가 소스 브랜치(예: <code>feature/login</code>)가 생성된 이후로 어떤 새로운 커밋도 가지고 있지 않다면, Git은 'Fast-forward' 병합을 수행합니다.</p>
+<p>이 경우, Git은 단순히 대상 브랜치의 포인터를 소스 브랜치의 최신 커밋으로 이동시킵니다. 새로운 병합 커밋(Merge Commit)은 생성되지 않으며, 이력은 선형적으로 진행됩니다.</p>
+<p><strong>Fast-forward Merge 시나리오:</strong>
+1.  <code>main</code> 브랜치에서 <code>feature/login</code> 브랜치 생성.
+2.  <code>feature/login</code> 브랜치에서 여러 커밋 생성.
+3.  <code>main</code> 브랜치에는 <code>feature/login</code> 생성 이후 아무런 커밋도 없음.
+4.  <code>feature/login</code>을 <code>main</code>으로 병합.</p>
+<p><strong>실습: Fast-forward Merge</strong></p>
+<p>이전 <code>git-branch-example</code> 저장소를 사용하여 <code>feature/login</code> 브랜치를 <code>main</code>으로 병합해봅시다.</p>
+<ol>
+<li><code>main</code> 브랜치로 전환합니다.
+    <code>bash
+    git switch main</code></li>
+<li><code>feature/login</code> 브랜치를 <code>main</code>으로 병합합니다.
+    <code>bash
+    git merge feature/login</code>
+    <code>Updating a0a0a0a..b1b1b1b
+    Fast-forward
+     login.html | 1 +
+     1 file changed, 1 insertion(+)
+     create mode 100644 login.html</code>
+    출력에서 <code>Fast-forward</code>라는 문구를 확인할 수 있습니다.</li>
+<li><code>main</code> 브랜치에서 <code>login.html</code> 파일이 생겼는지 확인합니다.
+    <code>bash
+    ls</code>
+    <code>index.html  login.html</code></li>
+<li>
+<p>변경 이력을 확인하여 <code>Fast-forward</code> 병합이 어떻게 기록되었는지 살펴봅니다.
+    <code>bash
+    git log --graph --oneline --all</code>
+    ```</p>
+<ul>
+<li>b1b1b1b (HEAD -&gt; main, feature/login) feat: Add login page</li>
+<li>a0a0a0a Initial commit: Add basic index.html
+<code>``</code>main<code>브랜치 포인터가</code>feature/login<code>브랜치 포인터와 동일한</code>b1b1b1b<code>커밋을 가리키도록 이동했습니다. 새로운 병합 커밋은 없습니다. 이제</code>feature/login` 브랜치는 더 이상 필요 없으니 삭제할 수 있습니다.</li>
+</ul>
+<p><code>bash
+git branch -d feature/login</code>
+<code>Deleted branch feature/login (was b1b1b1b).</code></p>
+</li>
+</ol>
+<h3 id="2-3-way-merge">2. 3-way Merge (삼방향 병합)</h3>
+<p>대부분의 실제 개발 환경에서는 Fast-forward 병합만으로는 충분하지 않습니다. 여러 개발자가 동시에 작업하거나, 한 브랜치에서 작업하는 동안 <code>main</code> 브랜치에도 다른 변경 사항이 커밋될 수 있습니다. 이 경우, 병합하려는 두 브랜치의 이력이 분기(Diverge)됩니다.</p>
+<p>이럴 때 Git은 '3-way Merge'를 수행합니다. Git은 두 브랜치의 공통 조상(Common Ancestor) 커밋을 찾고, 이 공통 조상으로부터 각 브랜치에서 어떤 변경이 있었는지 비교하여 새로운 병합 커밋을 생성합니다. 이 병합 커밋은 두 브랜치의 모든 변경 사항을 포함하며, 두 브랜치의 이력을 하나로 합칩니다.</p>
+<p><strong>3-way Merge 시나리오:</strong>
+1.  <code>main</code> 브랜치에서 <code>feature/dashboard</code> 브랜치 생성.
+2.  <code>feature/dashboard</code> 브랜치에서 커밋 생성.
+3.  <strong>동시에, <code>main</code> 브랜치에서도 새로운 커밋 생성.</strong>
+4.  <code>feature/dashboard</code>를 <code>main</code>으로 병합.</p>
+<p><strong>실습: 3-way Merge</strong></p>
+<ol>
+<li><code>main</code> 브랜치에서 새로운 <code>feature/dashboard</code> 브랜치를 생성하고 전환합니다.
+    <code>bash
+    git switch -c feature/dashboard</code></li>
+<li><code>dashboard.html</code> 파일을 생성하고 커밋합니다.
+    <code>bash
+    echo "&lt;h2&gt;User Dashboard&lt;/h2&gt;" &gt; dashboard.html
+    git add dashboard.html
+    git commit -m "feat: Add dashboard page"</code></li>
+<li><code>main</code> 브랜치로 돌아가서 <code>index.html</code> 파일을 수정하고 커밋합니다.
+    <code>bash
+    git switch main
+    echo "&lt;p&gt;New content on main branch!&lt;/p&gt;" &gt;&gt; index.html
+    git add index.html
+    git commit -m "refactor: Update index page on main"</code>
+    이제 <code>main</code>과 <code>feature/dashboard</code> 브랜치 모두 공통 조상으로부터 새로운 커밋을 가지고 있습니다.</li>
+<li><code>feature/dashboard</code> 브랜치를 <code>main</code>으로 병합합니다.
+    <code>bash
+    git merge feature/dashboard</code>
+    <code>Merge made by the 'recursive' strategy.
+     dashboard.html | 1 +
+     1 file changed, 1 insertion(+)
+     create mode 100644 dashboard.html</code>
+    이번에는 <code>Merge made by the 'recursive' strategy</code>라는 메시지가 나타납니다. 이는 3-way Merge가 수행되었음을 의미합니다. Git은 자동으로 병합 커밋 메시지를 생성하며, 기본 편집기에서 이를 확인하고 저장할 수 있습니다. (메시지를 그대로 저장하려면 <code>Esc</code>를 누른 후 <code>:wq</code>를 입력하고 <code>Enter</code>를 누르거나, <code>Ctrl+X</code>, <code>Y</code>, <code>Enter</code> 등 사용 중인 편집기(예: Vim, Nano)에 따라 다릅니다.)</li>
+<li>변경 이력을 확인합니다.
+    <code>bash
+    git log --graph --oneline --all</code>
+    ```<ul>
+<li>e4e4e4e (HEAD -&gt; main) Merge branch 'feature/dashboard'
+|\
+| * c2c2c2c (feature/dashboard) feat: Add dashboard page</li>
+<li>| d3d3d3d refactor: Update index page on main
+|/</li>
+<li>b1b1b1b feat: Add login page</li>
+<li>a0a0a0a Initial commit: Add basic index.html
+<code>``
+그래프를 보면</code>main<code>과</code>feature/dashboard<code>브랜치가 분기되었다가</code>e4e4e4e`이라는 새로운 병합 커밋에서 다시 합쳐지는 것을 명확히 볼 수 있습니다. 이 병합 커밋은 두 브랜치의 모든 변경 사항을 담고 있습니다.</li>
+</ul>
+</li>
+</ol>
+<hr />
+<h2 id="merge-conflict">병합 충돌 해결하기: Merge Conflict</h2>
+<p>Git은 대부분의 경우 자동으로 병합을 수행하지만, 때로는 Git이 두 브랜치에서 동일한 파일의 '동일한 부분'을 서로 다르게 변경했을 때 어떤 변경 사항을 유지해야 할지 판단할 수 없습니다. 이럴 때 '병합 충돌(Merge Conflict)'이 발생합니다.</p>
+<p>병합 충돌은 당황스러울 수 있지만, Git을 사용한다면 피할 수 없는 정상적인 상황이며, 해결하는 방법을 아는 것이 중요합니다.</p>
+<p><strong>병합 충돌 시나리오:</strong>
+1.  <code>main</code> 브랜치에서 <code>bugfix/typo</code> 브랜치 생성.
+2.  <code>bugfix/typo</code> 브랜치에서 <code>index.html</code> 파일의 특정 줄을 수정하고 커밋.
+3.  <strong>동시에, <code>main</code> 브랜치에서도 <code>index.html</code> 파일의 <em>동일한 줄</em>을 다르게 수정하고 커밋.</strong>
+4.  <code>bugfix/typo</code>를 <code>main</code>으로 병합.</p>
+<p><strong>실습: 병합 충돌 발생 및 해결</strong></p>
+<p>현재 <code>main</code> 브랜치의 <code>index.html</code> 파일 내용은 다음과 같을 것입니다.</p>
+<pre><code class="language-html">&lt;h1&gt;Welcome to My Website&lt;/h1&gt;
+&lt;p&gt;New content on main branch!&lt;/p&gt;
+</code></pre>
+<ol>
+<li><code>main</code> 브랜치에서 새로운 <code>bugfix/typo</code> 브랜치를 생성하고 전환합니다.
+    <code>bash
+    git switch -c bugfix/typo</code></li>
+<li>텍스트 편집기로 <code>index.html</code> 파일을 열어 첫 번째 줄을 <code>&lt;h1&gt;Welcome to Our Website&lt;/h1&gt;</code>로 수정하고 저장하세요.
+    <code>bash
+    # 예를 들어, Vim 사용 시:
+    # vim index.html
+    # 첫 번째 줄을 &lt;h1&gt;Welcome to Our Website&lt;/h1&gt; 로 수정 후 저장 (Esc, :wq, Enter)</code>
+    수정 후 <code>git add</code> 및 <code>git commit</code>을 합니다.
+    <code>bash
+    git add index.html
+    git commit -m "fix: Change welcome message to plural"</code></li>
+<li><code>main</code> 브랜치로 돌아갑니다.
+    <code>bash
+    git switch main</code></li>
+<li>텍스트 편집기로 <code>index.html</code> 파일을 열어 <strong>동일한 첫 번째 줄</strong>을 <code>&lt;h1&gt;Hello World!&lt;/h1&gt;</code>로 수정하고 저장하세요.
+    <code>bash
+    # 예를 들어, Vim 사용 시:
+    # vim index.html
+    # 첫 번째 줄을 &lt;h1&gt;Hello World!&lt;/h1&gt; 로 수정 후 저장 (Esc, :wq, Enter)</code>
+    수정 후 <code>git add</code> 및 <code>git commit</code>을 합니다.
+    <code>bash
+    git add index.html
+    git commit -m "feat: Update welcome message to Hello World"</code>
+    이제 충돌을 일으킬 준비가 되었습니다.</li>
+<li>
+<p><code>bugfix/typo</code> 브랜치를 <code>main</code>으로 병합합니다.
+    <code>bash
+    git merge bugfix/typo</code>
+    <code>Auto-merging index.html
+    CONFLICT (content): Merge conflict in index.html
+    Automatic merge failed; fix conflicts and then commit the result.</code>
+    Git은 <code>CONFLICT</code> 메시지를 출력하며 병합에 실패했음을 알려줍니다. <code>git status</code>를 입력하여 현재 상황을 확인해봅시다.
+    <code>bash
+    git status</code>
+    ```
+    On branch main
+    You have unmerged paths.
+      (fix conflicts and run "git commit")
+      (use "git merge --abort" to abort the merge)</p>
+<p>Unmerged paths:
+  (use "git add <file>..." to mark resolution)
+        both modified: index.html</p>
+<p>no changes added to commit (use "git add" and/or "git commit -a")
+<code>``</code>Unmerged paths<code>섹션에서</code>index.html` 파일에 충돌이 발생했음을 알려줍니다.</p>
+</li>
+</ol>
+<h3 id="_2">충돌 해결 단계</h3>
+<ol>
+<li>
+<p><strong>충돌 파일 확인:</strong> 충돌이 발생한 파일을 텍스트 편집기로 엽니다. Git은 충돌이 발생한 부분을 특별한 마커로 표시합니다.
+    <code>html
+    &lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
+    &lt;h1&gt;Hello World!&lt;/h1&gt;
+    =======
+    &lt;h1&gt;Welcome to Our Website&lt;/h1&gt;
+    &gt;&gt;&gt;&gt;&gt;&gt;&gt; bugfix/typo
+    &lt;p&gt;New content on main branch!&lt;/p&gt;</code></p>
+<ul>
+<li><code>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</code>: 현재 브랜치(<code>main</code>)의 변경 사항 시작점입니다.</li>
+<li><code>=======</code>: 두 브랜치의 변경 사항을 구분하는 구분선입니다.</li>
+<li><code>&gt;&gt;&gt;&gt;&gt;&gt;&gt; bugfix/typo</code>: 병합하려는 브랜치(<code>bugfix/typo</code>)의 변경 사항 끝점입니다.</li>
+</ul>
+</li>
+<li>
+<p><strong>수동으로 해결:</strong> 개발자가 직접 이 마커들을 제거하고, 두 변경 사항 중 하나를 선택하거나, 두 변경 사항을 조합하여 최종 버전을 만듭니다.
+    예를 들어, 두 변경 사항을 모두 유지하고 싶다면 다음과 같이 수정할 수 있습니다.
+    <code>html
+    &lt;h1&gt;Hello World! Welcome to Our Website&lt;/h1&gt;
+    &lt;p&gt;New content on main branch!&lt;/p&gt;</code>
+    또는 <code>bugfix/typo</code> 브랜치의 변경 사항만 유지하고 싶다면:
+    <code>html
+    &lt;h1&gt;Welcome to Our Website&lt;/h1&gt;
+    &lt;p&gt;New content on main branch!&lt;/p&gt;</code>
+    여기서는 두 변경 사항을 모두 포함하여 다음과 같이 수정하겠습니다.
+    <code>html
+    &lt;h1&gt;Hello World! Welcome to Our Website&lt;/h1&gt;
+    &lt;p&gt;New content on main branch!&lt;/p&gt;</code></p>
+</li>
+<li>
+<p><strong>해결된 파일 스테이징:</strong> 충돌을 해결하고 파일을 저장한 후, Git에게 충돌이 해결되었음을 알려야 합니다.
+    <code>bash
+    git add index.html</code>
+    <code>git status</code>를 다시 확인하면, <code>Changes to be committed</code> 섹션에 <code>index.html</code>이 추가된 것을 볼 수 있습니다.</p>
+</li>
+<li>
+<p><strong>병합 커밋 생성:</strong> 모든 충돌을 해결하고 파일을 스테이징했다면, 마지막으로 병합 커밋을 생성합니다.
+    <code>bash
+    git commit</code>
+    Git은 자동으로 병합 커밋 메시지를 생성합니다. 일반적으로 이 메시지를 그대로 사용하거나 필요에 따라 수정하여 저장합니다.</p>
+</li>
+<li>
+<p><strong>병합 완료 확인:</strong> <code>git log --graph --oneline --all</code> 명령으로 병합 이력을 확인합니다.
+    ```</p>
+<ul>
+<li>h7h7h7h (HEAD -&gt; main) Merge branch 'bugfix/typo'
+|\
+| * f5f5f5f (bugfix/typo) fix: Change welcome message to plural</li>
+<li>| g6g6g6g feat: Update welcome message to Hello World
+|/</li>
+<li>e4e4e4e Merge branch 'feature/dashboard'
+|\
+| * c2c2c2c feat: Add dashboard page</li>
+<li>| d3d3d3d refactor: Update index page on main
+|/</li>
+<li>b1b1b1b feat: Add login page</li>
+<li>a0a0a0a Initial commit: Add basic index.html
+<code>``
+이제 충돌이 해결되고 새로운 병합 커밋</code>h7h7h7h<code>이 생성된 것을 볼 수 있습니다.</code>bugfix/typo` 브랜치는 이제 삭제할 수 있습니다.</li>
+</ul>
+<p><code>bash
+git branch -d bugfix/typo</code></p>
+</li>
+</ol>
+<hr />
+<h2 id="feature-branch-workflow">브랜치 활용 전략: Feature Branch Workflow</h2>
+<p>지금까지 브랜치의 기본적인 개념과 사용법을 익혔습니다. 하지만 실제 팀 프로젝트에서는 브랜치를 어떻게 효과적으로 관리해야 할까요? Git에는 다양한 '브랜치 전략(Branching Strategy)'이 존재하며, 그중 가장 널리 사용되는 것 중 하나가 'Feature Branch Workflow'입니다.</p>
+<p><strong>Feature Branch Workflow:</strong></p>
+<p>이 전략은 새로운 기능(Feature)을 개발하거나 버그를 수정할 때마다 <code>main</code> 브랜치에서 새로운 브랜치를 생성하여 작업하는 방식입니다.</p>
+<ol>
+<li><strong>브랜치 생성:</strong> 새로운 기능 개발을 시작할 때, <code>main</code> 브랜치에서 <code>feature/&lt;기능-이름&gt;</code> (예: <code>feature/user-profile</code>)과 같은 이름으로 브랜치를 생성합니다.</li>
+<li><strong>독립적인 개발:</strong> 개발자는 이 기능 브랜치에서 자유롭게 코드를 수정하고 커밋합니다. <code>main</code> 브랜치에는 영향을 주지 않습니다.</li>
+<li><strong>코드 리뷰:</strong> 기능 개발이 완료되면, 다른 팀원에게 코드 리뷰를 요청합니다. (이 과정은 주로 GitHub, GitLab, Bitbucket 같은 원격 저장소 서비스에서 'Pull Request' 또는 'Merge Request'를 통해 이루어집니다.)</li>
+<li><strong>병합 및 삭제:</strong> 코드 리뷰를 통과하고 테스트가 완료되면, 기능 브랜치를 <code>main</code> 브랜치로 병합합니다. 병합이 완료된 기능 브랜치는 일반적으로 삭제합니다.</li>
+</ol>
+<p><strong>장점:</strong></p>
+<ul>
+<li><strong>격리된 개발:</strong> <code>main</code> 브랜치는 항상 안정적이고 배포 가능한 상태를 유지할 수 있습니다.</li>
+<li><strong>쉬운 코드 리뷰:</strong> 특정 기능에 대한 변경 사항만 모여 있으므로 코드 리뷰가 효율적입니다.</li>
+<li><strong>실험의 자유:</strong> 실패하더라도 <code>main</code> 브랜치에 악영향을 주지 않습니다.</li>
+<li><strong>병렬 개발:</strong> 여러 개발자가 동시에 다른 기능을 개발할 수 있습니다.</li>
+</ul>
+<p>이 외에도 Git Flow, GitHub Flow 등 다양한 브랜치 전략이 존재하지만, Feature Branch Workflow는 가장 기본적인 형태이며 많은 프로젝트에서 변형하여 사용됩니다. 중요한 것은 팀의 규모, 프로젝트의 특성, 개발 주기에 맞춰 가장 적합한 전략을 선택하는 것입니다.</p>
+<hr />
+<h2 id="_3">연습 문제 및 회고</h2>
+<ol>
+<li>
+<p>새로운 Git 저장소를 만들고 다음 시나리오를 Git 명령어로 구현해보세요.</p>
+<ul>
+<li><code>main</code> 브랜치에 <code>README.md</code> 파일을 추가하고 커밋합니다.</li>
+<li><code>feature/settings</code> 브랜치를 생성하고 전환합니다.</li>
+<li><code>settings.html</code> 파일을 추가하고 커밋합니다.</li>
+<li><code>main</code> 브랜치로 돌아와 <code>README.md</code> 파일을 수정하고 커밋합니다.</li>
+<li><code>feature/settings</code> 브랜치를 <code>main</code> 브랜치로 병합할 때, 충돌이 발생하도록 <code>settings.html</code>의 특정 라인과 <code>README.md</code>의 특정 라인을 의도적으로 겹치게 변경해봅니다.</li>
+<li>발생한 병합 충돌을 해결하고 병합 커밋을 완료합니다.</li>
+<li><code>git log --graph --oneline --all</code> 명령으로 모든 과정을 시각적으로 확인합니다.</li>
+<li>더 이상 필요 없는 <code>feature/settings</code> 브랜치를 삭제합니다.</li>
+</ul>
+</li>
+<li>
+<p>Git 브랜치가 왜 다른 버전 관리 시스템의 브랜치보다 효율적이라고 생각하는지 자신의 언어로 설명해보세요.</p>
+</li>
+<li>Fast-forward 병합과 3-way 병합의 차이점은 무엇이며, 각각 어떤 상황에서 발생하는지 설명해보세요.</li>
+<li>만약 여러분이 팀 프로젝트를 시작한다면, 브랜치를 어떻게 활용하여 효율적인 개발 워크플로우를 구축할지 간략하게 구상해보세요.</li>
+</ol>
+<hr />
+<h2 id="_4">요약</h2>
+<p>이번 장에서는 Git의 핵심이자 강력한 기능인 브랜치와 병합에 대해 깊이 있게 다루었습니다.</p>
+<ul>
+<li><strong>브랜치</strong>는 특정 커밋을 가리키는 가벼운 포인터이며, 독립적인 개발 흐름을 가능하게 합니다.</li>
+<li><code>git branch &lt;이름&gt;</code>으로 브랜치를 생성하고, <code>git switch &lt;이름&gt;</code> (또는 <code>git checkout &lt;이름&gt;</code>)으로 브랜치 간을 전환할 수 있습니다.</li>
+<li><code>git branch -d &lt;이름&gt;</code>으로 브랜치를 삭제하며, <code>-D</code> 옵션으로 강제 삭제할 수 있습니다.</li>
+<li><code>git log --graph --oneline --all</code> 명령은 브랜치와 커밋 이력을 시각적으로 보여줍니다.</li>
+<li><strong>병합</strong>은 다른 브랜치의 변경 사항을 현재 브랜치로 통합하는 과정이며, <code>git merge &lt;소스-브랜치&gt;</code> 명령을 사용합니다.</li>
+<li><strong>Fast-forward Merge</strong>는 이력이 선형적일 때 발생하며, 단순히 브랜치 포인터를 이동시킵니다.</li>
+<li><strong>3-way Merge</strong>는 이력이 분기되었을 때 공통 조상을 기반으로 새로운 병합 커밋을 생성합니다.</li>
+<li><strong>병합 충돌</strong>은 Git이 자동으로 변경 사항을 통합할 수 없을 때 발생하며, 개발자가 수동으로 해결한 후 <code>git add</code>와 <code>git commit</code>으로 병합을 완료해야 합니다.</li>
+<li><strong>Feature Branch Workflow</strong>와 같은 브랜치 전략은 팀의 효율적인 협업을 돕습니다.</li>
+</ul>
+<p>이제 여러분은 Git 브랜치를 자유자재로 다루고, 다른 사람들과 협업하며 발생할 수 있는 충돌까지 해결할 수 있는 능력을 갖추게 되었습니다. Git의 이러한 유연한 브랜칭 모델 덕분에 개발자들은 메인 코드베이스를 안정적으로 유지하면서도 새로운 기능을 끊임없이 실험하고 통합할 수 있습니다.</p>
+<p>다음 장에서는 우리가 로컬에서 작업한 이 소중한 변경 사항들을 어떻게 원격 저장소(Remote Repository)에 공유하고, 다른 팀원들과 협력하는지 Git의 원격 저장소 개념과 사용법에 대해 자세히 알아보겠습니다.</p>
+
+            <nav class="chapter-nav">
+                
+                
+                
+                
+                
+                    
+                    
+                
+                    
+                    
+                
+                    
+                    
+                
+                    
+                    
+                
+                    
+                    
+                
+                    
+                    
+                
+                    
+                    
+                
+                
+                    <a href="chapter-04.html">&larr; 이전 챕터</a>
+                
+                
+                    <a href="chapter-06.html">다음 챕터 &rarr;</a>
+                
+            </nav>
+        </article>
+    </div>
+</body>
+</html>

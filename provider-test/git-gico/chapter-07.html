@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1. 파일 수정 - Git 기초</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: "Noto Sans KR", system-ui, sans-serif; background: #fff; color: #333; }
+        .layout { display: flex; min-height: 100vh; }
+        .sidebar { width: 260px; background: #f8f9fa; border-right: 1px solid #e0e0e0; padding: 1.5rem; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+        .sidebar h3 { font-size: 1rem; margin-bottom: 1rem; }
+        .sidebar h3 a { color: #1a1a2e; text-decoration: none; }
+        .sidebar ul { list-style: none; }
+        .sidebar li { margin-bottom: 0.4rem; }
+        .sidebar a { color: #555; text-decoration: none; font-size: 0.9rem; display: block; padding: 0.3rem 0.5rem; border-radius: 4px; }
+        .sidebar a:hover { background: #e8e8e8; }
+        .sidebar a.active { background: #1a1a2e; color: #fff; }
+        .sidebar .back { margin-top: 1.5rem; font-size: 0.85rem; }
+        .content { flex: 1; padding: 2rem 3rem; max-width: 800px; }
+        .content h1 { font-size: 1.8rem; margin-bottom: 1rem; border-bottom: 2px solid #e0e0e0; padding-bottom: 0.5rem; }
+        .content h2 { font-size: 1.4rem; margin-top: 2rem; margin-bottom: 0.8rem; }
+        .content h3 { font-size: 1.15rem; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+        .content p { line-height: 1.8; margin-bottom: 1rem; }
+        .content ul, .content ol { margin: 1rem 0 1rem 2rem; line-height: 1.8; }
+        .content blockquote { border-left: 4px solid #e94560; padding-left: 1rem; margin: 1rem 0; color: #666; }
+        .content code { background: #f0f0f0; padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.9em; }
+        .content pre { background: #1a1a2e; color: #e0e0e0; padding: 1rem; border-radius: 8px; overflow-x: auto; margin: 1rem 0; }
+        .content pre code { background: none; padding: 0; }
+        .chapter-nav { display: flex; justify-content: space-between; margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #e0e0e0; }
+        .chapter-nav a { color: #1a1a2e; text-decoration: none; }
+        .chapter-nav a:hover { color: #e94560; }
+        @media (max-width: 768px) {
+            .layout { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; position: static; }
+            .content { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <nav class="sidebar">
+            <h3><a href="../index.html">Git 기초</a></h3>
+            <ul>
+                
+                <li>
+                    <a href="chapter-01.html"
+                       >
+                        1. 1장: 버전 관리와 Git의 이해
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="chapter-02.html"
+                       >
+                        2. 2장. Git 설치 및 기본 설정: 버전 관리의 첫걸음
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="chapter-03.html"
+                       >
+                        3. 3장: 로컬 저장소 시작하기: 커밋의 기본
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="chapter-04.html"
+                       >
+                        4. 4장: 변경 이력 탐색 및 관리
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="chapter-05.html"
+                       >
+                        5. 5. 브랜치와 병합: Git의 핵심
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="chapter-06.html"
+                       >
+                        6. 6장: 원격 저장소와 협업: 함께 코드를 만들다
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="chapter-07.html"
+                       class="active">
+                        7. 1. 파일 수정
+                    </a>
+                </li>
+                
+            </ul>
+            <div class="back">
+                <a href="../index.html">&larr; 도서관으로</a>
+            </div>
+        </nav>
+
+        <article class="content">
+            <h2 id="7-git">7장: Git 되돌리기 및 유용한 기능: 개발자의 안전망과 생산성 도구</h2>
+<p>개발 과정에서 실수는 피할 수 없는 부분입니다. 코드를 잘못 수정하거나, 불필요한 파일을 추가하거나, 심지어 중요한 변경 사항을 실수로 삭제할 수도 있습니다. 이런 순간에 등골이 오싹해지는 경험, 한 번쯤 해보셨을 겁니다. 하지만 걱정하지 마세요. Git은 단순히 변경 사항을 추적하는 것을 넘어, 여러분의 실수를 효과적으로 되돌리고, 프로젝트의 혼란을 정리하며, 나아가 개발 생산성을 극대화할 수 있는 강력한 도구들을 제공합니다.</p>
+<p>이번 장에서는 Git의 '되돌리기' 기능을 통해 마치 시간 여행자처럼 과거의 특정 시점으로 돌아가거나, 특정 변경 사항만을 취소하는 방법을 배울 것입니다. 또한, <code>.gitignore</code>로 불필요한 파일을 관리하고, <code>git tag</code>로 프로젝트의 중요한 이정표를 표시하며, <code>git stash</code>로 작업 중인 변경 사항을 임시로 보관하는 등 Git의 '유용한 기능'들을 익혀 여러분의 Git 활용 능력을 한 단계 끌어올릴 것입니다. 이 모든 기능은 여러분이 더욱 자신감 있고 효율적으로 코드를 관리할 수 있도록 도울 것입니다.</p>
+<hr />
+<h3 id="71-git">7.1. Git 되돌리기: 시간 여행자처럼</h3>
+<p>Git은 다양한 수준에서 변경 사항을 되돌릴 수 있는 여러 가지 명령어를 제공합니다. 어떤 상황에서 어떤 명령어를 사용해야 하는지 정확히 이해하는 것이 중요합니다.</p>
+<h4 id="711-git-restore-git-checkout">7.1.1. 작업 디렉토리와 스테이징 영역 되돌리기: <code>git restore</code> 또는 <code>git checkout &lt;파일&gt;</code></h4>
+<p>가장 가벼운 수준의 되돌리기는 아직 커밋되지 않은 변경 사항에 대한 것입니다. 여러분이 파일을 수정했지만, 아직 <code>git add</code>를 하지 않았거나, <code>git add</code>는 했지만 아직 <code>git commit</code>을 하지 않은 상태일 때 사용합니다.</p>
+<p><strong>Git의 세 가지 상태 복습:</strong>
+*   <strong>작업 디렉토리 (Working Directory):</strong> 현재 작업 중인 파일들이 있는 곳입니다. 파일 수정이 이루어지는 공간입니다.
+*   <strong>스테이징 영역 (Staging Area / Index):</strong> 다음 커밋에 포함될 변경 사항들을 준비하는 곳입니다. <code>git add</code> 명령으로 파일이 이곳으로 이동합니다.
+*   <strong>로컬 저장소 (Local Repository):</strong> <code>git commit</code> 명령으로 변경 사항이 영구적으로 저장되는 곳입니다.</p>
+<p><strong>시나리오:</strong> <code>index.html</code> 파일을 수정했는데, 마음에 들지 않아 처음 상태로 되돌리고 싶습니다.</p>
+<pre><code class="language-bash"># 1. 파일 수정
+echo &quot;새로운 내용&quot; &gt; index.html
+
+# 2. 변경 사항 확인 (modified 상태)
+git status
+</code></pre>
+<p><strong>작업 디렉토리의 변경 사항 되돌리기:</strong>
+<code>git restore</code>는 작업 디렉토리의 변경 사항을 버리고, 가장 최근 커밋(또는 스테이징 영역) 상태로 되돌리는 데 사용되는 최신 명령어입니다.</p>
+<pre><code class="language-bash">git restore index.html
+</code></pre>
+<p><code>git checkout -- &lt;파일 경로&gt;</code>는 동일한 기능을 수행하며, 여전히 널리 사용되는 명령어입니다. 하지만 Git 2.23 버전부터는 <code>git restore</code>가 이 기능을 전담하는 명령어로 도입되었습니다.</p>
+<pre><code class="language-bash">git checkout -- index.html
+</code></pre>
+<p>이 명령어를 실행하면 <code>index.html</code> 파일의 내용이 마지막 커밋 또는 스테이징 영역에 있던 내용으로 돌아갑니다.</p>
+<p><strong>스테이징 영역의 변경 사항 되돌리기 (Unstage):</strong>
+만약 <code>git add</code>를 통해 파일을 스테이징 영역에 올렸지만, 커밋하기 전에 마음이 바뀌어 스테이징을 취소하고 싶다면 <code>git restore --staged</code>를 사용합니다.</p>
+<pre><code class="language-bash"># 1. 파일 수정 및 스테이징
+echo &quot;새로운 내용 2&quot; &gt; index.html
+git add index.html
+
+# 2. 상태 확인 (Changes to be committed 상태)
+git status
+
+# 3. 스테이징 취소
+git restore --staged index.html
+
+# 4. 상태 확인 (Changes not staged for commit 상태)
+git status
+</code></pre>
+<p><code>git restore --staged</code>를 사용하면 파일은 스테이징 영역에서 내려오지만, 작업 디렉토리의 변경 사항은 그대로 남아있습니다. 즉, 여전히 <code>modified</code> 상태로 남아있어 다시 수정하거나 <code>git restore index.html</code>로 작업 디렉토리의 변경 사항까지 버릴 수 있습니다.</p>
+<h4 id="712-git-reset-git-revert">7.1.2. 커밋 되돌리기: <code>git reset</code>과 <code>git revert</code>의 차이점</h4>
+<p>커밋된 변경 사항을 되돌리는 것은 좀 더 신중해야 합니다. Git은 이를 위해 <code>git reset</code>과 <code>git revert</code>라는 두 가지 주요 명령어를 제공하는데, 이 둘은 작동 방식과 목적이 매우 다릅니다.</p>
+<p><strong>핵심 개념: HEAD</strong>
+Git에서 <code>HEAD</code>는 현재 작업 중인 브랜치의 최신 커밋을 가리키는 포인터입니다. 여러분이 커밋을 할 때마다 <code>HEAD</code>는 새로운 커밋으로 이동합니다. <code>git reset</code>은 이 <code>HEAD</code> 포인터를 이동시켜 커밋 기록을 변경하는 명령어입니다.</p>
+<h5 id="7121-git-reset-history-rewriting">7.1.2.1. <code>git reset</code>: 로컬 기록 수정 (History Rewriting)</h5>
+<p><code>git reset</code>은 <code>HEAD</code>가 가리키는 커밋을 이동시켜 커밋 기록을 수정합니다. 이는 주로 아직 원격 저장소에 푸시되지 않은 로컬 커밋을 되돌릴 때 사용됩니다. <code>git reset</code>은 <code>--soft</code>, <code>--mixed</code> (기본값), <code>--hard</code> 세 가지 주요 옵션을 가집니다.</p>
+<p><strong><code>git reset --soft &lt;커밋&gt;</code>: HEAD 이동, 변경 사항은 스테이징 영역에 유지</strong>
+*   <code>HEAD</code> 포인터를 지정된 커밋으로 이동시킵니다.
+*   이후 커밋들의 변경 사항은 그대로 남아서 <strong>스테이징 영역(Staging Area)</strong>에 올라갑니다.
+*   다시 커밋하기 전에 변경 사항을 검토하거나 수정할 수 있습니다.</p>
+<p><strong>예시:</strong> 최근 2개의 커밋을 되돌리고 싶지만, 변경 내용은 보존하여 다시 커밋하고 싶을 때.</p>
+<pre><code class="language-bash"># 1. 현재 커밋 기록 확인
+git log --oneline
+
+# 2. 최근 2개의 커밋을 되돌리고, 변경 사항을 스테이징 영역에 유지
+git reset --soft HEAD~2 # (현재 HEAD에서 2단계 이전 커밋으로 되돌림) 또는 git reset --soft &lt;특정 커밋 해시&gt; # (해당 커밋으로 HEAD를 이동)
+
+# 3. 상태 확인 (이전 커밋들의 변경 사항이 스테이징 되어 있음)
+git status
+</code></pre>
+<p><strong><code>git reset --mixed &lt;커밋&gt;</code> (기본값): HEAD 이동, 변경 사항은 작업 디렉토리에 유지</strong>
+*   <code>HEAD</code> 포인터를 지정된 커밋으로 이동시킵니다.
+*   이후 커밋들의 변경 사항은 <strong>작업 디렉토리(Working Directory)</strong>에 남아있고, 스테이징 영역에서는 제거됩니다. (<code>modified</code> 상태로 변경)
+*   <code>git reset</code>에 옵션을 지정하지 않으면 <code>--mixed</code>가 기본값으로 적용됩니다.</p>
+<p><strong>예시:</strong> 최근 커밋을 되돌리고, 변경 사항을 다시 검토한 후 <code>git add</code>부터 다시 시작하고 싶을 때.</p>
+<pre><code class="language-bash"># 1. 현재 커밋 기록 확인
+git log --oneline
+
+# 2. 최근 1개의 커밋을 되돌리고, 변경 사항을 작업 디렉토리에 유지
+git reset HEAD~1 # --mixed는 생략 가능
+
+# 3. 상태 확인 (이전 커밋의 변경 사항이 modified 상태로 남아 있음)
+git status
+</code></pre>
+<p><strong><code>git reset --hard &lt;커밋&gt;</code>: HEAD 이동, 모든 변경 사항 삭제 (가장 강력하고 위험!)</strong>
+*   <code>HEAD</code> 포인터를 지정된 커밋으로 이동시킵니다.
+*   <strong>지정된 커밋 이후의 모든 변경 사항을 작업 디렉토리와 스테이징 영역에서 완전히 삭제합니다.</strong>
+*   이 명령어는 매우 강력하며, 실행하면 해당 커밋 이후의 모든 작업 내용이 영구적으로 사라질 수 있습니다.</p>
+<p><strong>주의사항:</strong> <code>git reset --hard</code>는 <strong>절대 안전하지 않습니다!</strong> 이 명령어를 실행하면 해당 커밋 이후의 모든 변경 사항이 <strong>영구적으로 삭제</strong>되므로, 사용 시 극도의 주의가 필요합니다. 특히 원격 저장소에 푸시된 커밋에 대해서는 사용하지 않는 것이 좋습니다. (다른 사람들의 작업 기록과 충돌을 일으킬 수 있습니다.)</p>
+<p><strong>예시:</strong> 최근 커밋과 그 이후의 모든 작업 내용을 완전히 버리고, 깨끗한 상태로 돌아가고 싶을 때.</p>
+<pre><code class="language-bash"># 1. 현재 커밋 기록 확인
+git log --oneline
+
+# 2. 최근 1개의 커밋과 그 이후의 모든 변경 사항을 삭제
+git reset --hard HEAD~1
+
+# 3. 상태 확인 (모든 변경 사항이 사라지고 깨끗한 상태)
+git status
+</code></pre>
+<p><strong>언제 <code>git reset</code>을 사용해야 할까요?</strong>
+*   아직 원격 저장소에 푸시하지 않은 <strong>로컬 커밋</strong>을 되돌릴 때.
+*   커밋 메시지를 수정하거나, 여러 커밋을 하나로 합치는 등 <strong>커밋 기록을 정리</strong>할 때 (<code>git rebase</code>와 함께 사용되기도 합니다).
+*   실수로 커밋한 내용이 완전히 불필요하다고 판단될 때.</p>
+<h5 id="7122-git-revert-new-commit-creation">7.1.2.2. <code>git revert</code>: 안전하게 변경 취소 (New Commit Creation)</h5>
+<p><code>git revert</code>는 <code>git reset</code>과 달리 기존 커밋 기록을 수정하지 않습니다. 대신, <strong>특정 커밋에서 발생한 변경 사항을 되돌리는 새로운 커밋을 생성</strong>합니다. 이는 마치 "이전 커밋에서 했던 작업을 취소하는 작업을 했다"는 기록을 남기는 것과 같습니다.</p>
+<p><strong>언제 <code>git revert</code>를 사용해야 할까요?</strong>
+*   이미 원격 저장소에 푸시되어 <strong>다른 사람들과 공유된 커밋</strong>을 되돌릴 때.
+*   커밋 기록을 그대로 유지하면서 특정 변경 사항만 취소하고 싶을 때.
+*   <code>git reset</code>과 달리 <strong>안전하게 되돌릴 수 있는 방법</strong>입니다.</p>
+<p><strong>오해 해소:</strong> <code>git revert</code>는 기록을 수정하는 것이 아니라, 새로운 커밋을 추가하여 변경을 되돌리는 것입니다.</p>
+<p><strong>예시:</strong> <code>feature-A</code> 커밋에서 버그가 발생하여 해당 커밋의 변경 사항을 취소하고 싶을 때.</p>
+<pre><code class="language-bash"># 1. 커밋 기록 확인
+git log --oneline
+
+# 2. 특정 커밋 (예: commit_hash)의 변경 사항을 되돌리는 새로운 커밋 생성
+git revert &lt;commit_hash&gt;
+
+# 3. revert 커밋 메시지 작성 (기본 메시지 제공)
+# Git이 자동으로 revert 커밋 메시지를 제안하며, 필요에 따라 수정할 수 있습니다.
+# 예: Revert &quot;feat: add feature A&quot;
+
+# 4. 새로운 커밋 기록 확인
+git log --oneline
+</code></pre>
+<p><code>git revert</code>를 사용하면 <code>feature-A</code> 커밋은 여전히 기록에 남아있지만, 그 변경 사항은 <code>Revert "feature-A"</code>라는 새로운 커밋에 의해 취소됩니다.</p>
+<h4 id="713-git-clean">7.1.3. 추적되지 않은 파일 제거: <code>git clean</code></h4>
+<p><code>git clean</code>은 Git이 버전 관리하지 않는(untracked) 파일이나 디렉토리를 작업 디렉토리에서 제거하는 명령어입니다. 빌드 결과물, 로그 파일, 임시 파일 등 Git이 추적하지 않아야 할 불필요한 파일들을 깨끗하게 정리할 때 유용합니다.</p>
+<p><strong>주의사항:</strong> <code>git clean</code>은 <strong>매우 파괴적</strong>일 수 있으므로 사용에 주의해야 합니다. 한 번 삭제된 파일은 복구하기 어렵습니다.</p>
+<p><strong>주요 옵션:</strong>
+*   <code>git clean -n</code>: (Dry run) 실제로 삭제하지 않고, 어떤 파일들이 삭제될지 미리 보여줍니다. <strong>항상 먼저 이 옵션으로 확인하는 습관을 들이세요!</strong>
+*   <code>git clean -f</code>: (Force) 추적되지 않은 파일들을 강제로 삭제합니다. <code>-f</code> 옵션 없이는 실행되지 않습니다.
+*   <code>git clean -df</code>: <code>-d</code> 옵션은 추적되지 않은 디렉토리까지 삭제합니다. <code>-f</code>와 함께 사용해야 합니다.</p>
+<p><strong>예시:</strong></p>
+<pre><code class="language-bash"># 1. 임시 파일 생성
+touch temp.log
+mkdir build
+touch build/output.js
+
+# 2. 추적되지 않은 파일 확인
+git status
+
+# 3. 어떤 파일들이 삭제될지 미리 확인 (가장 중요!)
+git clean -n
+
+# 4. 추적되지 않은 파일과 디렉토리 삭제
+git clean -df
+</code></pre>
+<h4 id="714-git-reflog">7.1.4. 잃어버린 커밋 찾기: <code>git reflog</code></h4>
+<p><code>git reflog</code>는 Git의 '안전벨트'와 같은 기능입니다. <code>git reset --hard</code> 등으로 인해 <code>HEAD</code>가 이동하면서 "잃어버린" 것처럼 보이는 커밋들을 찾아낼 수 있습니다. <code>reflog</code>는 <code>HEAD</code> 및 브랜치 팁의 모든 업데이트 기록을 보여주므로, 여러분이 Git 저장소에서 수행한 거의 모든 작업(커밋, 브랜치 전환, 리셋 등)의 흔적을 확인할 수 있습니다.</p>
+<p><strong>예시:</strong> 실수로 <code>git reset --hard</code>를 실행하여 중요한 커밋을 날려버렸을 때.</p>
+<pre><code class="language-bash"># 1. 커밋 기록 확인
+git log --oneline
+
+# 2. 실수로 reset --hard 실행 (예: 최근 커밋을 날림)
+git reset --hard HEAD~1
+
+# 3. &quot;잃어버린&quot; 커밋을 찾기 위해 reflog 확인
+git reflog
+
+# 4. reflog 출력에서 복구하고 싶은 커밋의 해시를 찾습니다.
+# 예: ab12345 (HEAD@{2}): commit: Add new feature
+
+# 5. 해당 커밋으로 돌아가기
+git reset --hard ab12345
+</code></pre>
+<p><code>git reflog</code>는 Git이 추적하는 모든 참조(reference)의 이동 기록을 보여주며, 이를 통해 어떤 실수를 했더라도 대부분의 경우 복구할 수 있는 강력한 도구입니다.</p>
+<hr />
+<h3 id="72-git">7.2. Git의 유용한 기능들: 생산성 향상 도구</h3>
+<p>Git은 단순히 변경 사항을 되돌리는 것을 넘어, 개발자의 생산성을 높이고 프로젝트를 효율적으로 관리하기 위한 다양한 유용한 기능들을 제공합니다.</p>
+<h4 id="721-gitignore">7.2.1. 불필요한 파일 무시하기: <code>.gitignore</code></h4>
+<p>개발 프로젝트에는 Git으로 버전 관리할 필요가 없는 파일들이 많습니다. 예를 들어, 컴파일된 바이너리 파일, 빌드 로그, 임시 파일, 운영체제별 설정 파일, IDE 설정 파일, 민감한 API 키 등이 있습니다. 이러한 파일들이 실수로 커밋되는 것을 방지하고, <code>git status</code> 명령어를 깔끔하게 유지하기 위해 <code>.gitignore</code> 파일을 사용합니다.</p>
+<p><code>.gitignore</code> 파일은 프로젝트의 루트 디렉토리에 위치하며, Git이 추적하지 않아야 할 파일이나 디렉토리 패턴을 지정합니다.</p>
+<p><strong><code>.gitignore</code> 작동 방식:</strong>
+*   <strong>오해 해소:</strong> <code>.gitignore</code>는 Git이 <strong>아직 추적하지 않는 (untracked)</strong> 파일에만 적용됩니다. 이미 <code>git add</code>로 추적되고 있는 파일을 <code>.gitignore</code>에 추가해도 Git은 계속 해당 파일을 추적합니다.
+*   <strong>이미 추적 중인 파일을 무시하려면:</strong> 먼저 Git의 추적 대상에서 해당 파일을 제거해야 합니다.
+    <code>bash
+    git rm --cached &lt;파일 경로&gt; # --cached 옵션은 로컬 파일은 남기고 Git 추적만 중단
+    git commit -m "Untrack &lt;파일 경로&gt;"</code>
+    이후 <code>.gitignore</code>에 해당 파일 패턴을 추가합니다.</p>
+<p><strong><code>.gitignore</code> 패턴 예시:</strong></p>
+<pre><code class="language-gitignore"># 주석은 #으로 시작합니다.
+
+# 1. 특정 파일 무시
+*.log        # 모든 .log 파일 무시
+temp.txt     # temp.txt 파일 무시
+
+# 2. 특정 디렉토리 무시
+/build/      # 루트 디렉토리의 build 폴더 무시
+node_modules/ # 모든 node_modules 폴더 무시
+
+# 3. 특정 패턴의 파일 무시
+*.tmp        # 모든 .tmp 확장자 파일 무시
+!important.log # .log 파일 중 important.log만 무시하지 않음 (예외 처리)
+
+# 4. 특정 운영체제/IDE 관련 파일
+.DS_Store    # macOS 시스템 파일
+.vscode/     # VS Code 설정 디렉토리
+</code></pre>
+<p><code>.gitignore</code> 파일을 잘 관리하는 것은 프로젝트의 깔끔함을 유지하고, 협업 시 불필요한 커밋 충돌을 방지하는 데 매우 중요합니다.</p>
+<p><strong>연습:</strong>
+1.  <code>touch test.log</code> 파일을 생성하고 <code>git status</code>로 <code>Untracked files</code>에 나타나는 것을 확인합니다.
+2.  <code>.gitignore</code> 파일을 생성하고 <code>*.log</code>를 추가합니다.
+3.  다시 <code>git status</code>를 실행하여 <code>test.log</code>가 보이지 않는 것을 확인합니다.
+4.  <code>git add .gitignore</code> 후 커밋합니다.</p>
+<h4 id="722-git-tag">7.2.2. 중요한 이정표 표시: <code>git tag</code></h4>
+<p><code>git tag</code>는 특정 커밋에 의미 있는 이름을 부여하여 중요한 시점(예: 릴리스 버전, 특정 기능 완성 시점)을 표시하는 데 사용됩니다. 이는 프로젝트의 역사를 명확하게 정리하고, 특정 버전으로 쉽게 돌아갈 수 있게 해줍니다.</p>
+<p><strong>태그의 종류:</strong>
+1.  <strong>경량 태그 (Lightweight Tag):</strong> 특정 커밋에 대한 포인터일 뿐입니다. 브랜치와 유사하지만, 이동하지 않습니다.
+    <code>bash
+    git tag v1.0.0-beta</code>
+2.  <strong>주석 태그 (Annotated Tag):</strong> 태그를 만든 사람의 이름, 이메일, 날짜, 태그 메시지 등 추가 정보를 포함하는 완전한 Git 객체입니다. 릴리스와 같이 중요한 이정표를 표시할 때 <strong>권장</strong>됩니다.</p>
+<pre><code>```bash
+git tag -a v1.0.0 -m "Release version 1.0.0 - Stable and ready for production"
+```
+</code></pre>
+<p><strong>태그 명령어:</strong>
+*   <strong>모든 태그 목록 보기:</strong>
+    <code>bash
+    git tag</code>
+*   <strong>특정 태그의 정보 확인:</strong>
+    <code>bash
+    git show v1.0.0</code>
+*   <strong>태그를 원격 저장소로 푸시:</strong> 태그는 기본적으로 <code>git push</code>로 푸시되지 않습니다. 별도로 푸시해야 합니다.
+    <code>bash
+    git push origin v1.0.0 # 특정 태그 푸시
+    git push origin --tags # 모든 태그 푸시</code>
+*   <strong>태그 삭제:</strong>
+    <code>bash
+    git tag -d v1.0.0 # 로컬 태그 삭제
+    git push origin --delete v1.0.0 # 원격 태그 삭제</code></p>
+<p><code>git tag</code>는 프로젝트의 릴리스 관리와 같이 중요한 시점을 명확히 할 때 매우 유용합니다.</p>
+<h4 id="723-git-stash">7.2.3. 작업 임시 저장: <code>git stash</code></h4>
+<p>상상해 보세요. 여러분이 어떤 기능(Feature A)을 개발하던 중, 갑자기 팀장이 긴급 버그 수정(Bugfix B)을 요청합니다. 하지만 Feature A는 아직 완성되지 않았고, 커밋하기에는 너무 지저분합니다. 그렇다고 작업 내용을 모두 지울 수도 없습니다. 이럴 때 <code>git stash</code>가 구세주가 될 수 있습니다.</p>
+<p><code>git stash</code>는 현재 작업 중인 변경 사항(작업 디렉토리와 스테이징 영역의 내용)을 임시 저장소에 보관하여, 작업 디렉토리를 깨끗한 상태로 되돌려줍니다. 이렇게 하면 다른 브랜치로 전환하거나 다른 작업을 수행할 수 있으며, 나중에 다시 저장된 변경 사항을 불러와 이어서 작업할 수 있습니다.</p>
+<p><strong>오해 해소:</strong> <code>git stash</code>는 변경 사항을 영구적으로 저장하는 방법이 아닙니다. 주로 컨텍스트 전환을 위한 임시 저장 공간으로 사용됩니다. 중요한 변경 사항은 항상 커밋하는 것이 좋습니다.</p>
+<p><strong><code>git stash</code> 명령어:</strong>
+*   <strong>현재 변경 사항 임시 저장:</strong>
+    <code>bash
+    git stash push -m "Feature A 작업 중" # (메시지와 함께 저장, 최신 권장 방식)
+    git stash # (메시지 없이 저장, `git stash push`와 동일)</code>
+    이 명령을 실행하면 작업 디렉토리가 마지막 커밋 상태로 깨끗해집니다.
+*   <strong>저장된 스태시 목록 확인:</strong>
+    <code>bash
+    git stash list
+    # 출력 예: stash@{0}: On master: Feature A 작업 중
+    #          stash@{1}: On feature/login: 임시 저장</code>
+*   <strong>가장 최근 스태시 적용 (작업 디렉토리로 가져오기):</strong>
+    <code>bash
+    git stash apply # 가장 최근(stash@{0}) 스태시 적용
+    git stash apply stash@{1} # 특정 스태시 적용</code>
+    <code>apply</code>는 스태시를 적용하지만, 스태시 목록에서는 삭제하지 않습니다.
+*   <strong>가장 최근 스태시 적용 및 삭제:</strong>
+    <code>bash
+    git stash pop # 가장 최근(stash@{0}) 스태시 적용 후 목록에서 삭제</code>
+    <code>pop</code>은 <code>apply</code>와 <code>drop</code>을 합친 것과 같습니다.
+*   <strong>스태시 삭제:</strong>
+    <code>bash
+    git stash drop stash@{0} # 특정 스태시 삭제
+    git stash clear # 모든 스태시 삭제</code></p>
+<p><strong><code>git stash</code> 활용 예시:</strong></p>
+<pre><code class="language-bash"># 1. feature-A 브랜치에서 작업 중, 아직 커밋하기 애매한 상태
+# (파일 수정, git add 후 일부만 스테이징 상태)
+git status
+
+# 2. 긴급 버그 수정 요청으로 master 브랜치로 전환해야 함
+git stash push -m &quot;Feature A 긴급 저장&quot;
+
+# 3. 작업 디렉토리가 깨끗해진 것을 확인
+git status
+
+# 4. master 브랜치로 전환 및 버그 수정
+git checkout master
+# ... 버그 수정 및 커밋 ...
+git commit -m &quot;Fix critical bug&quot;
+
+# 5. 다시 feature-A 작업으로 돌아가기 위해 브랜치 전환
+git checkout feature-A
+
+# 6. 저장했던 스태시를 불러와서 작업 이어가기
+git stash pop
+</code></pre>
+<p><code>git stash</code>는 개발 워크플로우를 유연하게 만들고, 갑작스러운 컨텍스트 전환에 효과적으로 대응할 수 있게 해주는 매우 유용한 기능입니다.</p>
+<hr />
+<h3 id="73">7.3. 연습 문제 및 생각할 점</h3>
+<ol>
+<li>
+<p><strong>시나리오:</strong> <code>main.js</code> 파일을 수정하고 <code>git add main.js</code>로 스테이징했습니다. 그런데 방금 수정한 내용이 잘못된 것을 깨달았습니다. 어떻게 해야 스테이징을 취소하고, 수정된 내용을 작업 디렉토리에서 완전히 버릴 수 있을까요?</p>
+<ul>
+<li><strong>힌트:</strong> <code>git restore</code> 명령어를 두 번 사용해 보세요.</li>
+</ul>
+</li>
+<li>
+<p><strong>시나리오:</strong> 여러분은 <code>feat: add user authentication</code>이라는 커밋을 했습니다. 하지만 이 기능이 아직 불안정하다고 판단하여, 이 커밋을 "아예 없었던 일"로 만들고 싶습니다. 단, 이 커밋은 아직 원격 저장소에 푸시되지 않은 로컬 커밋입니다. 변경 내용은 유지하되, 커밋 상태만 되돌리고 싶다면 어떤 <code>git reset</code> 옵션을 사용해야 할까요? 만약 변경 내용까지 완전히 버리고 싶다면요?</p>
+</li>
+<li>
+<p><strong>시나리오:</strong> <code>utils/temp_data.json</code>이라는 임시 파일을 만들었는데, <code>git status</code>를 할 때마다 <code>Untracked files</code> 목록에 나타나 거슬립니다. 이 파일을 Git이 영원히 무시하도록 만들고 싶습니다. 어떻게 해야 할까요?</p>
+</li>
+<li>
+<p><strong>시나리오:</strong> 현재 개발 중인 기능이 거의 완성되었지만, 아직 커밋할 정도는 아닙니다. 그런데 다른 팀원이 여러분의 도움을 요청하여 잠시 다른 브랜치로 전환하여 작업해야 합니다. 현재 작업 내용을 잃지 않으면서 안전하게 다른 브랜치로 이동하는 방법은 무엇일까요?</p>
+</li>
+</ol>
+<hr />
+<h3 id="74">7.4. 요약 및 다음 장 예고</h3>
+<p>이번 장에서는 Git의 강력한 '되돌리기' 기능들을 통해 개발 과정에서 발생할 수 있는 다양한 실수를 안전하게 복구하는 방법을 배웠습니다. <code>git restore</code>로 작업 디렉토리의 변경 사항을 버리고, <code>git reset</code>으로 로컬 커밋 기록을 수정하며, <code>git revert</code>로 공유된 커밋을 안전하게 취소하는 방법을 익혔습니다. 또한, <code>git clean</code>으로 불필요한 파일을 정리하고, <code>git reflog</code>로 잃어버린 커밋을 찾아내는 비법도 확인했습니다.</p>
+<p>더 나아가, <code>.gitignore</code>로 깔끔한 프로젝트 환경을 만들고, <code>git tag</code>로 프로젝트의 중요한 이정표를 표시하며, <code>git stash</code>로 작업 컨텍스트를 유연하게 전환하는 생산성 향상 도구들을 살펴보았습니다. 이 모든 기능들은 여러분이 Git을 더욱 능숙하게 다루고, 어떤 상황에서도 자신감을 가지고 개발할 수 있도록 돕는 든든한 지원군이 될 것입니다.</p>
+<p>이제 여러분은 Git의 기본적인 작동 방식과 브랜치 관리, 원격 저장소 협업, 그리고 실수로부터 복구하는 방법까지 폭넓게 이해하게 되었습니다. 다음 장에서는 Git의 고급 기능 중 하나인 '리베이스(Rebase)'에 대해 심도 있게 다룰 예정입니다. 리베이스는 커밋 기록을 더욱 깔끔하게 정리하고, 브랜치 병합을 효율적으로 수행하는 데 필수적인 고급 기술입니다. Git 마스터로 가는 여정, 다음 장에서 계속됩니다!</p>
+
+            <nav class="chapter-nav">
+                
+                
+                
+                
+                
+                    
+                    
+                
+                    
+                    
+                
+                    
+                    
+                
+                    
+                    
+                
+                    
+                    
+                
+                    
+                    
+                
+                    
+                    
+                
+                
+                    <a href="chapter-06.html">&larr; 이전 챕터</a>
+                
+                
+                    <span></span>
+                
+            </nav>
+        </article>
+    </div>
+</body>
+</html>

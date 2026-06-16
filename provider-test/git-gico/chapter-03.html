@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3장: 로컬 저장소 시작하기: 커밋의 기본 - Git 기초</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: "Noto Sans KR", system-ui, sans-serif; background: #fff; color: #333; }
+        .layout { display: flex; min-height: 100vh; }
+        .sidebar { width: 260px; background: #f8f9fa; border-right: 1px solid #e0e0e0; padding: 1.5rem; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+        .sidebar h3 { font-size: 1rem; margin-bottom: 1rem; }
+        .sidebar h3 a { color: #1a1a2e; text-decoration: none; }
+        .sidebar ul { list-style: none; }
+        .sidebar li { margin-bottom: 0.4rem; }
+        .sidebar a { color: #555; text-decoration: none; font-size: 0.9rem; display: block; padding: 0.3rem 0.5rem; border-radius: 4px; }
+        .sidebar a:hover { background: #e8e8e8; }
+        .sidebar a.active { background: #1a1a2e; color: #fff; }
+        .sidebar .back { margin-top: 1.5rem; font-size: 0.85rem; }
+        .content { flex: 1; padding: 2rem 3rem; max-width: 800px; }
+        .content h1 { font-size: 1.8rem; margin-bottom: 1rem; border-bottom: 2px solid #e0e0e0; padding-bottom: 0.5rem; }
+        .content h2 { font-size: 1.4rem; margin-top: 2rem; margin-bottom: 0.8rem; }
+        .content h3 { font-size: 1.15rem; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+        .content p { line-height: 1.8; margin-bottom: 1rem; }
+        .content ul, .content ol { margin: 1rem 0 1rem 2rem; line-height: 1.8; }
+        .content blockquote { border-left: 4px solid #e94560; padding-left: 1rem; margin: 1rem 0; color: #666; }
+        .content code { background: #f0f0f0; padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.9em; }
+        .content pre { background: #1a1a2e; color: #e0e0e0; padding: 1rem; border-radius: 8px; overflow-x: auto; margin: 1rem 0; }
+        .content pre code { background: none; padding: 0; }
+        .chapter-nav { display: flex; justify-content: space-between; margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #e0e0e0; }
+        .chapter-nav a { color: #1a1a2e; text-decoration: none; }
+        .chapter-nav a:hover { color: #e94560; }
+        @media (max-width: 768px) {
+            .layout { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; position: static; }
+            .content { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <nav class="sidebar">
+            <h3><a href="../index.html">Git 기초</a></h3>
+            <ul>
+                
+                <li>
+                    <a href="chapter-01.html"
+                       >
+                        1. 1장: 버전 관리와 Git의 이해
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="chapter-02.html"
+                       >
+                        2. 2장. Git 설치 및 기본 설정: 버전 관리의 첫걸음
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="chapter-03.html"
+                       class="active">
+                        3. 3장: 로컬 저장소 시작하기: 커밋의 기본
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="chapter-04.html"
+                       >
+                        4. 4장: 변경 이력 탐색 및 관리
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="chapter-05.html"
+                       >
+                        5. 5. 브랜치와 병합: Git의 핵심
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="chapter-06.html"
+                       >
+                        6. 6장: 원격 저장소와 협업: 함께 코드를 만들다
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="chapter-07.html"
+                       >
+                        7. 1. 파일 수정
+                    </a>
+                </li>
+                
+            </ul>
+            <div class="back">
+                <a href="../index.html">&larr; 도서관으로</a>
+            </div>
+        </nav>
+
+        <article class="content">
+            <h1 id="3">3장: 로컬 저장소 시작하기: 커밋의 기본</h1>
+<p>상상해 보세요. 야심 차게 시작한 새로운 프로젝트의 첫 번째 코드를 작성하고, 몇 시간 동안 수정과 개선을 거듭한 끝에 마침내 만족스러운 결과물을 얻었습니다. 이제 이 소중한 작업물을 안전하게 저장해야 할 때입니다. 그런데 단순히 파일을 저장하는 것만으로는 부족합니다. 만약 나중에 이 코드를 다시 수정해야 하는데, 이전 버전으로 되돌리고 싶다면 어떻게 해야 할까요? 실수로 중요한 부분을 삭제하거나, 팀원과 함께 작업하다가 변경 이력이 꼬인다면요?</p>
+<p>이러한 문제들을 해결하고 여러분의 작업물을 안전하게 지켜줄 Git의 가장 기본적인 마법, 바로 '커밋(Commit)'을 배울 시간입니다. 커밋은 여러분의 프로젝트가 특정 시점에 어떤 모습이었는지를 기록하는 스냅샷과 같습니다. 마치 사진작가가 중요한 순간을 포착하듯, Git은 여러분의 코드 변경 이력을 정확히 포착하고 영구적으로 저장합니다. 이 장에서는 새로운 Git 저장소를 만들고, 파일 변경 사항을 추적하며, 의미 있는 커밋을 통해 변경 이력을 차곡차곡 쌓아가는 방법을 자세히 살펴보겠습니다.</p>
+<h2 id="31-git-git-init">3.1 새로운 Git 저장소 초기화: <code>git init</code></h2>
+<p>Git을 사용하기 위한 첫 번째 단계는 프로젝트 폴더를 Git이 관리하는 '저장소(Repository)'로 만드는 것입니다. 저장소는 Git이 프로젝트의 모든 변경 이력을 추적하고 저장하는 특별한 공간입니다. 이 과정을 '초기화(Initialize)'라고 부르며, <code>git init</code> 명령어를 통해 수행합니다.</p>
+<p><code>git init</code>은 여러분의 현재 작업 디렉토리(Working Directory)를 Git 저장소로 변환합니다. 이 명령어를 실행하면, Git은 해당 디렉토리 안에 <code>.git</code>이라는 숨겨진 하위 디렉토리를 생성합니다. 이 <code>.git</code> 디렉토리는 여러분의 프로젝트에 대한 모든 Git 관련 정보, 즉 변경 이력, 설정, 객체 데이터베이스 등을 포함하고 있습니다. <strong><code>.git</code> 디렉토리는 Git 저장소의 핵심이며, 절대로 수동으로 건드리거나 삭제해서는 안 됩니다.</strong></p>
+<p>그럼 직접 해볼까요?</p>
+<ol>
+<li>
+<p><strong>새로운 프로젝트 폴더 생성:</strong> 터미널 또는 명령 프롬프트를 열고, Git 저장소로 만들고 싶은 폴더를 생성합니다.
+    <code>bash
+    mkdir my_new_project
+    cd my_new_project</code>
+    이 명령은 <code>my_new_project</code>라는 새 폴더를 만들고, 그 안으로 이동합니다.</p>
+</li>
+<li>
+<p><strong>Git 저장소 초기화:</strong> 이제 이 폴더 안에서 <code>git init</code> 명령어를 실행합니다.
+    <code>bash
+    git init</code>
+    명령어를 실행하면 다음과 유사한 메시지가 나타날 것입니다:
+    <code>Initialized empty Git repository in /path/to/my_new_project/.git/</code>
+    이 메시지는 현재 디렉토리가 성공적으로 Git 저장소로 초기화되었음을 의미합니다.</p>
+</li>
+</ol>
+<p>이제 <code>my_new_project</code> 폴더는 단순한 폴더가 아니라, Git의 관리를 받는 '로컬 저장소(Local Repository)'가 되었습니다. 앞으로 이 안에서 이루어지는 모든 파일 변경 사항은 Git에 의해 추적될 준비가 된 것입니다.</p>
+<h2 id="32-git">3.2 Git의 세 가지 상태와 작업 영역</h2>
+<p>Git의 핵심적인 작동 방식을 이해하려면, 파일이 Git의 관리 하에 놓일 때 거치는 세 가지 주요 상태와 그에 해당하는 세 가지 작업 영역을 알아야 합니다. 이 개념은 Git의 버전 관리 흐름을 파악하는 데 매우 중요합니다.</p>
+<p>사진작가의 작업 과정을 예로 들어볼까요?
+*   <strong>작업 디렉토리 (Working Directory):</strong> 카메라를 들고 현장에서 사진을 찍는 순간입니다. 아직 어떤 사진을 갤러리에 올릴지 결정되지 않은, 현재 작업 중인 상태입니다.
+*   <strong>스테이징 영역 (Staging Area / Index):</strong> 찍은 사진들 중 "이건 정말 잘 나왔다! 갤러리에 올릴 후보군"이라고 선별하여 임시로 모아두는 곳입니다. 아직 최종 갤러리에 등록된 것은 아니지만, 다음 번 등록에 포함될 사진들입니다.
+*   <strong>로컬 저장소 (Local Repository):</strong> 선별된 사진들을 최종적으로 갤러리에 등록하여 영구적으로 보관하는 곳입니다. 한 번 등록된 사진은 언제든 다시 찾아볼 수 있습니다.</p>
+<p>Git에서의 세 가지 상태와 작업 영역은 다음과 같습니다:</p>
+<ol>
+<li>
+<p><strong>작업 디렉토리 (Working Directory):</strong></p>
+<ul>
+<li><strong>파일 상태:</strong> 이 영역의 파일은 주로 <strong>수정됨 (Modified)</strong> 또는 <strong>추적되지 않음 (Untracked)</strong> 상태입니다.</li>
+<li>여러분 눈에 보이는 프로젝트 파일들이 위치한 곳입니다.</li>
+<li>파일을 생성하거나, 수정하거나, 삭제하는 모든 작업이 여기서 이루어집니다.</li>
+<li>Git이 아직 추적하지 않는 새 파일은 '추적되지 않음(Untracked)' 상태이며, Git이 추적하던 파일이 변경되면 '수정됨(Modified)' 상태가 됩니다.</li>
+</ul>
+</li>
+<li>
+<p><strong>스테이징 영역 (Staging Area / Index):</strong></p>
+<ul>
+<li><strong>파일 상태:</strong> 이 영역에 추가된 파일은 <strong>스테이지됨 (Staged)</strong> 상태입니다.</li>
+<li>다음 커밋에 포함하고 싶은 변경 사항들을 임시로 모아두는 곳입니다.</li>
+<li>Git은 이 영역에 있는 파일들만 커밋 대상으로 간주합니다.</li>
+<li>이 영역은 유연성을 제공합니다. 여러 파일 중 일부만 커밋하거나, 한 파일의 변경 사항 중 일부만 커밋하는 것도 가능하게 합니다.</li>
+</ul>
+</li>
+<li>
+<p><strong>로컬 저장소 (Local Repository):</strong></p>
+<ul>
+<li><strong>파일 상태:</strong> 이 영역에 저장된 파일은 <strong>커밋됨 (Committed)</strong> 상태입니다.</li>
+<li>스테이징 영역에 있는 파일들의 스냅샷이 영구적으로 저장되는 곳입니다.</li>
+<li>각 커밋은 고유한 식별자(해시)를 가지며, 특정 시점의 프로젝트 전체 상태를 나타냅니다.</li>
+<li>한 번 커밋된 내용은 언제든지 되돌아볼 수 있습니다.</li>
+</ul>
+</li>
+</ol>
+<p>이 세 가지 영역을 이해하는 것이 Git을 효과적으로 사용하는 데 필수적입니다. 여러분은 작업 디렉토리에서 코드를 개발하고, <code>git add</code> 명령어를 통해 변경 사항을 스테이징 영역으로 옮긴 다음, <code>git commit</code> 명령어로 스테이징 영역의 내용을 로컬 저장소에 영구적으로 기록하게 됩니다.</p>
+<h2 id="33-git-status-git-add">3.3 파일 변경 추적 및 스테이징: <code>git status</code>와 <code>git add</code></h2>
+<p>이제 실제로 파일을 만들고 Git이 어떻게 변경 사항을 추적하는지 살펴보겠습니다.</p>
+<h3 id="331-git-status">3.3.1 현재 상태 확인하기: <code>git status</code></h3>
+<p><code>git status</code> 명령어는 현재 작업 디렉토리와 스테이징 영역의 상태를 요약해서 보여주는 매우 유용한 도구입니다. Git 작업을 할 때 거의 매 순간 사용하게 될 것입니다.</p>
+<p>방금 초기화한 <code>my_new_project</code> 폴더 안에서 <code>git status</code>를 실행해 보세요.</p>
+<pre><code class="language-bash">git status
+</code></pre>
+<p>아마 다음과 같은 메시지가 나타날 것입니다:</p>
+<pre><code>On branch master
+
+No commits yet
+
+nothing to commit (create/copy files and use &quot;git add&quot; to track)
+</code></pre>
+<ul>
+<li><code>On branch master</code>: 현재 <code>master</code> 브랜치에 있다는 의미입니다. 브랜치에 대해서는 나중에 자세히 다룰 것입니다.</li>
+<li><code>No commits yet</code>: 아직 어떤 커밋도 없다는 것을 알려줍니다.</li>
+<li><code>nothing to commit</code>: 스테이징 영역에 커밋할 내용이 없다는 뜻입니다.</li>
+</ul>
+<h3 id="332-git-add">3.3.2 새 파일 추가 및 스테이징: <code>git add</code></h3>
+<p>이제 <code>my_new_project</code> 폴더 안에 <code>README.md</code> 파일을 생성하고 내용을 추가해 봅시다.</p>
+<ol>
+<li>
+<p><strong>파일 생성 및 내용 추가:</strong>
+    <code>bash
+    touch README.md
+    echo "# My Awesome Project" &gt; README.md
+    echo "This project is about learning Git basics." &gt;&gt; README.md</code>
+    이 명령은 <code>README.md</code> 파일을 만들고, 두 줄의 내용을 추가합니다.</p>
+</li>
+<li>
+<p><strong>상태 확인:</strong> 파일을 생성했으니 다시 <code>git status</code>를 실행해 보세요.
+    <code>bash
+    git status</code>
+    이번에는 다른 메시지가 나타날 것입니다:
+    ```
+    On branch master</p>
+<p>No commits yet</p>
+<p>Untracked files:
+  (use "git add <file>..." to include in what will be committed)</p>
+<pre><code>README.md
+</code></pre>
+<p>nothing added to commit but untracked files present (use "git add" to track)
+<code>``
+Git은</code>README.md` 파일을 '추적되지 않는 파일(Untracked files)'로 인식했습니다. 이는 Git이 이 파일의 존재를 알고 있지만, 아직 버전 관리 대상으로는 포함하지 않았다는 의미입니다. Git에게 이 파일을 추적하라고 알려줘야 합니다.</p>
+</li>
+<li>
+<p><strong>파일 스테이징:</strong> <code>git add</code> 명령어를 사용하여 <code>README.md</code> 파일을 스테이징 영역에 추가합니다.
+    <code>bash
+    git add README.md</code></p>
+</li>
+<li>
+<p><strong>다시 상태 확인:</strong> <code>git add</code> 후에는 항상 <code>git status</code>로 변경된 상태를 확인하는 습관을 들이는 것이 좋습니다.
+    <code>bash
+    git status</code>
+    ```
+    On branch master</p>
+<p>No commits yet</p>
+<p>Changes to be committed:
+  (use "git rm --cached <file>..." to unstage)</p>
+<pre><code>new file:   README.md
+</code></pre>
+<p><code>``
+이제</code>README.md<code>파일은 '커밋될 변경 사항(Changes to be committed)' 목록에 나타납니다. 이는</code>README.md` 파일이 작업 디렉토리에서 스테이징 영역으로 옮겨졌으며, 다음 커밋에 포함될 준비가 되었음을 의미합니다.</p>
+<p><strong>오해 해소:</strong> 많은 초보자들이 <code>git add</code>를 마치 "파일 저장" 버튼처럼 생각합니다. 하지만 <code>git add</code>는 파일을 로컬 저장소에 직접 저장하는 것이 아니라, 다음 커밋에 포함될 변경 사항들을 '스테이징 영역'에 준비시키는 역할을 합니다.</p>
+</li>
+</ol>
+<h3 id="333">3.3.3 파일 수정 및 재스테이징</h3>
+<p>이제 <code>README.md</code> 파일을 수정해보고, Git이 어떻게 이를 처리하는지 확인해 봅시다.</p>
+<ol>
+<li>
+<p><strong>파일 수정:</strong> <code>README.md</code> 파일에 한 줄을 더 추가합니다.
+    <code>bash
+    echo "This is the first commit." &gt;&gt; README.md</code></p>
+</li>
+<li>
+<p><strong>상태 확인:</strong>
+    <code>bash
+    git status</code>
+    ```
+    On branch master</p>
+<p>No commits yet</p>
+<p>Changes to be committed:
+  (use "git rm --cached <file>..." to unstage)</p>
+<pre><code>new file:   README.md
+</code></pre>
+<p>Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)</p>
+<pre><code>modified:   README.md
+</code></pre>
+<p><code>``
+흥미롭죠? Git은 두 가지 상태를 보여줍니다:
+*</code>Changes to be committed<code>: 스테이징 영역에 있는</code>README.md<code>파일의 이전 버전 (두 줄이 포함된 버전)
+*</code>Changes not staged for commit<code>: 작업 디렉토리에 있는</code>README.md` 파일의 현재 버전 (세 줄이 포함된, 방금 수정한 버전)</p>
+<p>이것은 Git의 강력함 중 하나입니다. 여러분은 파일의 수정 사항 중 일부만 스테이징하고 커밋할 수 있습니다. 예를 들어, 여러 기능을 개발하다가 한 기능만 먼저 커밋하고 싶을 때 유용합니다.</p>
+</li>
+<li>
+<p><strong>수정 사항 스테이징:</strong> 방금 추가한 세 번째 줄까지 커밋에 포함하고 싶다면, 다시 <code>git add README.md</code>를 실행해야 합니다.
+    <code>bash
+    git add README.md</code>
+    또는 현재 디렉토리의 모든 변경 사항(새 파일, 수정된 파일, 삭제된 파일)을 한 번에 스테이징 영역에 추가하려면 <code>git add .</code> (점 하나) 명령어를 사용합니다.
+    <code>bash
+    git add .</code></p>
+</li>
+<li>
+<p><strong>최종 상태 확인:</strong>
+    <code>bash
+    git status</code>
+    ```
+    On branch master</p>
+<p>No commits yet</p>
+<p>Changes to be committed:
+  (use "git rm --cached <file>..." to unstage)</p>
+<pre><code>new file:   README.md
+</code></pre>
+<p><code>``
+이제</code>README.md` 파일의 최신 수정 사항이 스테이징 영역에 반영되었으며, 다음 커밋에 포함될 준비가 완료되었습니다.</p>
+</li>
+</ol>
+<h2 id="34-git-commit">3.4 변경 사항 저장: <code>git commit</code></h2>
+<p>스테이징 영역에 변경 사항들이 준비되었다면, 이제 <code>git commit</code> 명령어를 사용하여 이 스냅샷을 로컬 저장소에 영구적으로 기록할 차례입니다.</p>
+<h3 id="341">3.4.1 첫 번째 커밋하기</h3>
+<p>스테이징 영역에 있는 <code>README.md</code> 파일을 커밋해 봅시다. 커밋할 때는 항상 '커밋 메시지(Commit Message)'를 함께 작성해야 합니다. 커밋 메시지는 이 커밋이 어떤 변경 사항을 포함하고 있는지 설명하는 짧고 명확한 요약입니다.</p>
+<p>가장 간단한 커밋 명령어는 <code>-m</code> 옵션을 사용하여 메시지를 직접 지정하는 것입니다.</p>
+<pre><code class="language-bash">git commit -m &quot;Initial commit: Add README.md with project description&quot;
+</code></pre>
+<p>명령어를 실행하면 다음과 유사한 메시지가 나타날 것입니다:</p>
+<pre><code>[master (root-commit) 6e2f1a3] Initial commit: Add README.md with project description
+ 1 file changed, 3 insertions(+)
+ create mode 100644 README.md
+</code></pre>
+<ul>
+<li><code>[master (root-commit) 6e2f1a3]</code>: <code>master</code> 브랜치에 첫 번째 커밋이 생성되었으며, <code>6e2f1a3</code>은 이 커밋의 고유한 식별자(커밋 해시의 일부)입니다.</li>
+<li><code>1 file changed, 3 insertions(+)</code>: 하나의 파일이 변경되었고, 세 줄이 추가되었음을 나타냅니다.</li>
+<li><code>create mode 100644 README.md</code>: <code>README.md</code> 파일이 새로 생성되었음을 보여줍니다.</li>
+</ul>
+<p>이제 <code>git status</code>를 다시 실행해 보세요.</p>
+<pre><code class="language-bash">git status
+</code></pre>
+<pre><code>On branch master
+nothing to commit, working tree clean
+</code></pre>
+<p><code>nothing to commit, working tree clean</code> 메시지는 현재 작업 디렉토리와 스테이징 영역이 로컬 저장소의 최신 커밋과 동일한 상태이며, 더 이상 커밋할 변경 사항이 없음을 의미합니다. 여러분은 성공적으로 첫 번째 커밋을 만들었습니다!</p>
+<p><strong>오해 해소:</strong> <code>git commit</code>은 작업 디렉토리의 모든 변경 사항을 저장하는 것이 아니라, <strong>스테이징 영역에 있는 내용만</strong> 저장합니다. 만약 <code>git add</code>를 하지 않고 <code>git commit</code>을 실행하면, 스테이징 영역이 비어있으므로 커밋할 내용이 없다는 메시지가 나올 것입니다.</p>
+<h3 id="342">3.4.2 의미 있는 커밋 메시지 작성법</h3>
+<p>커밋 메시지는 Git 사용의 핵심이자, 팀 협업의 중요한 요소입니다. 좋은 커밋 메시지는 나중에 변경 이력을 추적하거나 문제를 해결할 때 시간을 절약해 줍니다.</p>
+<p><strong>좋은 커밋 메시지의 원칙:</strong></p>
+<ol>
+<li>
+<p><strong>제목 줄 (Subject Line):</strong></p>
+<ul>
+<li><strong>간결하게 요약:</strong> 50자 이내로 작성합니다.</li>
+<li><strong>명령형 동사 사용:</strong> "Add feature", "Fix bug", "Update documentation"과 같이 변경 사항의 의도를 명확히 전달하는 명령형 동사로 시작합니다. (예: "기능 추가", "버그 수정", "문서 업데이트")</li>
+<li><strong>대문자로 시작:</strong> 일반적으로 제목의 첫 글자는 대문자로 시작합니다.</li>
+<li><strong>마침표 사용 금지:</strong> 제목 줄 끝에는 마침표를 찍지 않습니다.</li>
+</ul>
+</li>
+<li>
+<p><strong>본문 (Body):</strong></p>
+<ul>
+<li><strong>한 줄 띄기:</strong> 제목 줄과 본문 사이에는 반드시 한 줄을 비워둡니다.</li>
+<li><strong>상세 설명:</strong> 변경 사항의 배경, 이유, 무엇을 해결했는지, 어떤 영향을 미치는지 등을 자세히 설명합니다. 본문은 명령형이 아닌 서술형으로 작성하는 것이 일반적입니다.</li>
+<li><strong>72자 이내 줄 바꿈:</strong> 가독성을 위해 한 줄에 72자를 넘지 않도록 합니다.</li>
+</ul>
+</li>
+</ol>
+<p><strong>예시:</strong></p>
+<ul>
+<li>
+<p><strong>좋은 커밋 메시지:</strong>
+    ```
+    Feat: Add user authentication module</p>
+<p>This commit introduces a new user authentication module.
+It includes user registration, login, and session management.
+Uses JWT for token-based authentication.
+Resolves issue #123.
+<code>(한글 예시)</code>
+Feat: 사용자 인증 모듈 추가</p>
+<p>새로운 사용자 인증 모듈을 추가합니다.
+회원가입, 로그인, 세션 관리를 포함합니다.
+토큰 기반 인증을 위해 JWT를 사용합니다.
+이슈 #123 해결.
+```</p>
+</li>
+<li>
+<p><strong>나쁜 커밋 메시지:</strong>
+    <code>수정함</code>
+    (무엇을 수정했는지 알 수 없음)</p>
+<p><code>README.md 파일 업데이트 및 설정 변경</code>
+(너무 일반적이고, 왜 변경했는지 알 수 없음)</p>
+<p><code>버그 수정 완료. 이제 잘 될 거예요.</code>
+(비격식적이고, 어떤 버그인지 불분명)</p>
+</li>
+</ul>
+<p><code>git commit</code> 명령어를 <code>-m</code> 옵션 없이 실행하면, 설정된 기본 텍스트 편집기(vi, nano 등)가 열리며 커밋 메시지를 작성할 수 있습니다. 이때 위 원칙에 따라 제목과 본문을 작성하고 저장하면 됩니다.</p>
+<h3 id="343">3.4.3 두 번째 커밋 만들기</h3>
+<p><code>README.md</code> 파일을 다시 수정하고 새로운 커밋을 만들어 봅시다.</p>
+<ol>
+<li>
+<p><strong>파일 수정:</strong>
+    <code>bash
+    echo "" &gt;&gt; README.md # 빈 줄 추가
+    echo "## Getting Started" &gt;&gt; README.md
+    echo "Clone the repository and run `npm install`." &gt;&gt; README.md</code></p>
+</li>
+<li>
+<p><strong>상태 확인:</strong>
+    <code>bash
+    git status</code>
+    ```
+    On branch master
+    Changes not staged for commit:
+      (use "git add <file>..." to update what will be committed)
+      (use "git restore <file>..." to discard changes in working directory)</p>
+<pre><code>modified:   README.md
+</code></pre>
+<p>no changes added to commit (use "git add" and/or "git commit -a)")
+<code>``</code>README.md` 파일이 '수정됨(modified)' 상태로, 아직 스테이징 영역에 추가되지 않았음을 보여줍니다.</p>
+</li>
+<li>
+<p><strong>스테이징 및 커밋:</strong>
+    <code>bash
+    git add README.md
+    git commit -m "Docs: Add getting started section to README"</code>
+    <code>[master 4f6d3b2] Docs: Add getting started section to README
+     1 file changed, 3 insertions(+)</code>
+    두 번째 커밋이 성공적으로 생성되었습니다. 이제 <code>git status</code>를 실행하면 다시 <code>working tree clean</code> 상태가 될 것입니다.</p>
+</li>
+</ol>
+<h3 id="344">3.4.4 실습: 여러 파일 중 일부만 커밋하기</h3>
+<p>이해를 돕기 위해, 여러 파일이 변경되었을 때 특정 파일만 커밋하는 시나리오를 연습해 봅시다.</p>
+<ol>
+<li>
+<p><strong>두 개의 새 파일 생성:</strong>
+    ```bash
+    touch index.html
+    echo "<h1>Hello Git!</h1>" &gt; index.html</p>
+<p>touch style.css
+echo "body { font-family: sans-serif; }" &gt; style.css
+```</p>
+</li>
+<li>
+<p><strong>상태 확인:</strong>
+    <code>bash
+    git status</code>
+    ```
+    On branch master
+    Untracked files:
+      (use "git add <file>..." to include in what will be committed)</p>
+<pre><code>index.html
+style.css
+</code></pre>
+<p>nothing added to commit but untracked files present
+```
+두 파일 모두 '추적되지 않음' 상태입니다.</p>
+</li>
+<li>
+<p><strong><code>index.html</code>만 스테이징하고 커밋:</strong>
+    <code>bash
+    git add index.html
+    git commit -m "Feat: Add basic index.html"</code>
+    <code>[master 9a1b2c3] Feat: Add basic index.html
+     1 file changed, 1 insertion(+)
+     create mode 100644 index.html</code></p>
+</li>
+<li>
+<p><strong>상태 확인:</strong>
+    <code>bash
+    git status</code>
+    ```
+    On branch master
+    Untracked files:
+      (use "git add <file>..." to include in what will be committed)</p>
+<pre><code>style.css
+</code></pre>
+<p>nothing added to commit but untracked files present
+<code>``</code>index.html<code>은 커밋되었지만,</code>style.css<code>는 여전히 '추적되지 않음' 상태로 남아 있습니다.</code>git commit<code>은 오직 스테이징 영역에 있는</code>index.html`만 저장소에 기록했음을 알 수 있습니다.</p>
+</li>
+<li>
+<p><strong><code>style.css</code> 스테이징 및 커밋:</strong>
+    <code>bash
+    git add style.css
+    git commit -m "Style: Add basic styling for body"</code>
+    <code>[master 5d4e3f2] Style: Add basic styling for body
+     1 file changed, 1 insertion(+)
+     create mode 100644 style.css</code>
+    이제 모든 파일이 커밋되었고, 작업 디렉토리는 깨끗해졌습니다. 이처럼 <code>git add</code>와 <code>git commit</code>을 통해 원하는 변경 사항만 묶어서 커밋할 수 있습니다.</p>
+</li>
+</ol>
+<h2 id="35-git">3.5 Git의 핵심 워크플로우: 세 가지 영역의 상호작용</h2>
+<p>앞서 살펴본 Git의 세 가지 핵심 영역은 서로 유기적으로 연결되어 프로젝트의 변경 이력을 관리하는 일련의 워크플로우를 형성합니다. 이들의 상호작용을 이해하는 것이 Git을 효과적으로 활용하는 데 필수적입니다.</p>
+<p>여러분은 먼저 <strong>작업 디렉토리</strong>에서 코드를 작성하고 수정합니다. 여기서 파일들은 '수정됨' 또는 '추적되지 않음' 상태가 됩니다. 다음으로, <code>git add</code> 명령어를 사용하여 다음 커밋에 포함하고 싶은 변경 사항들을 <strong>스테이징 영역</strong>으로 옮깁니다. 이 영역에 있는 파일들은 '스테이지됨' 상태가 되며, Git은 오직 이 스테이징된 내용만을 커밋 대상으로 간주합니다. 마지막으로, <code>git commit</code> 명령어를 실행하여 스테이징 영역에 준비된 변경 사항들의 스냅샷을 <strong>로컬 저장소</strong>에 영구적으로 기록합니다. 이렇게 로컬 저장소에 저장된 파일들은 '커밋됨' 상태가 되며, 각 커밋은 프로젝트의 특정 시점 상태를 나타내는 불변의 기록이 됩니다.</p>
+<p>이러한 과정을 반복함으로써, 여러분은 프로젝트의 모든 변경 이력을 체계적으로 관리하고, 필요할 때마다 특정 시점으로 돌아갈 수 있는 강력한 능력을 갖게 됩니다.</p>
+<h2 id="36">3.6 정리 및 다음 단계</h2>
+<p>이 장에서는 Git을 사용하여 로컬 저장소를 시작하고, 파일 변경 사항을 추적하며, 의미 있는 커밋을 통해 프로젝트의 스냅샷을 기록하는 방법을 배웠습니다.</p>
+<p>핵심 명령어 및 개념:
+*   <code>git init</code>: 새로운 Git 저장소를 초기화합니다.
+*   <code>git status</code>: 현재 작업 디렉토리와 스테이징 영역의 상태를 확인합니다.
+*   <code>git add</code>: 작업 디렉토리의 변경 사항을 스테이징 영역으로 옮깁니다.
+*   <code>git commit</code>: 스테이징 영역의 스냅샷을 로컬 저장소에 영구적으로 기록합니다.
+*   Git의 세 가지 상태: 수정됨(Modified), 스테이지됨(Staged), 커밋됨(Committed).
+*   Git의 세 가지 영역: 작업 디렉토리(Working Directory), 스테이징 영역(Staging Area), 로컬 저장소(Local Repository).</p>
+<p>이제 여러분은 Git으로 프로젝트를 시작하고 기본적인 변경 이력을 기록할 수 있게 되었습니다. 하지만 이렇게 쌓인 커밋들을 어떻게 확인하고, 만약 잘못된 커밋을 했다면 어떻게 되돌릴 수 있을까요? 다음 장에서는 이 질문에 대한 답을 찾아보겠습니다. Git의 변경 이력을 조회하고, 필요에 따라 과거로 돌아가는 방법을 배우면서 Git의 시간 여행 능력을 탐험할 것입니다.</p>
+
+            <nav class="chapter-nav">
+                
+                
+                
+                
+                
+                    
+                    
+                
+                    
+                    
+                
+                    
+                    
+                
+                    
+                    
+                
+                    
+                    
+                
+                    
+                    
+                
+                    
+                    
+                
+                
+                    <a href="chapter-02.html">&larr; 이전 챕터</a>
+                
+                
+                    <a href="chapter-04.html">다음 챕터 &rarr;</a>
+                
+            </nav>
+        </article>
+    </div>
+</body>
+</html>

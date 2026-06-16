@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2장. Git 설치 및 기본 설정: 버전 관리의 첫걸음 - Git 기초</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: "Noto Sans KR", system-ui, sans-serif; background: #fff; color: #333; }
+        .layout { display: flex; min-height: 100vh; }
+        .sidebar { width: 260px; background: #f8f9fa; border-right: 1px solid #e0e0e0; padding: 1.5rem; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+        .sidebar h3 { font-size: 1rem; margin-bottom: 1rem; }
+        .sidebar h3 a { color: #1a1a2e; text-decoration: none; }
+        .sidebar ul { list-style: none; }
+        .sidebar li { margin-bottom: 0.4rem; }
+        .sidebar a { color: #555; text-decoration: none; font-size: 0.9rem; display: block; padding: 0.3rem 0.5rem; border-radius: 4px; }
+        .sidebar a:hover { background: #e8e8e8; }
+        .sidebar a.active { background: #1a1a2e; color: #fff; }
+        .sidebar .back { margin-top: 1.5rem; font-size: 0.85rem; }
+        .content { flex: 1; padding: 2rem 3rem; max-width: 800px; }
+        .content h1 { font-size: 1.8rem; margin-bottom: 1rem; border-bottom: 2px solid #e0e0e0; padding-bottom: 0.5rem; }
+        .content h2 { font-size: 1.4rem; margin-top: 2rem; margin-bottom: 0.8rem; }
+        .content h3 { font-size: 1.15rem; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+        .content p { line-height: 1.8; margin-bottom: 1rem; }
+        .content ul, .content ol { margin: 1rem 0 1rem 2rem; line-height: 1.8; }
+        .content blockquote { border-left: 4px solid #e94560; padding-left: 1rem; margin: 1rem 0; color: #666; }
+        .content code { background: #f0f0f0; padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.9em; }
+        .content pre { background: #1a1a2e; color: #e0e0e0; padding: 1rem; border-radius: 8px; overflow-x: auto; margin: 1rem 0; }
+        .content pre code { background: none; padding: 0; }
+        .chapter-nav { display: flex; justify-content: space-between; margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #e0e0e0; }
+        .chapter-nav a { color: #1a1a2e; text-decoration: none; }
+        .chapter-nav a:hover { color: #e94560; }
+        @media (max-width: 768px) {
+            .layout { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; position: static; }
+            .content { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <nav class="sidebar">
+            <h3><a href="../index.html">Git 기초</a></h3>
+            <ul>
+                
+                <li>
+                    <a href="chapter-01.html"
+                       >
+                        1. 1장: 버전 관리와 Git의 이해
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="chapter-02.html"
+                       class="active">
+                        2. 2장. Git 설치 및 기본 설정: 버전 관리의 첫걸음
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="chapter-03.html"
+                       >
+                        3. 3장: 로컬 저장소 시작하기: 커밋의 기본
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="chapter-04.html"
+                       >
+                        4. 4장: 변경 이력 탐색 및 관리
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="chapter-05.html"
+                       >
+                        5. 5. 브랜치와 병합: Git의 핵심
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="chapter-06.html"
+                       >
+                        6. 6장: 원격 저장소와 협업: 함께 코드를 만들다
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="chapter-07.html"
+                       >
+                        7. 1. 파일 수정
+                    </a>
+                </li>
+                
+            </ul>
+            <div class="back">
+                <a href="../index.html">&larr; 도서관으로</a>
+            </div>
+        </nav>
+
+        <article class="content">
+            <h1 id="2-git">2장. Git 설치 및 기본 설정: 버전 관리의 첫걸음</h1>
+<p>버전 관리의 세계로 뛰어들 준비가 되셨나요? 지난 장에서 Git이 무엇이며 왜 필요한지에 대해 알아보았다면, 이제는 여러분의 컴퓨터에 Git을 설치하고, Git이 여러분의 명령을 기다리도록 준비하는 시간을 가질 차례입니다. 마치 요리를 시작하기 전에 주방을 세팅하고 필요한 도구를 준비하는 것과 같습니다. 이 과정은 여러분이 Git을 효율적으로 사용하기 위한 필수적인 첫걸음이며, 한 번만 제대로 설정해두면 이후의 모든 작업이 훨씬 수월해질 것입니다.</p>
+<p>이 장에서는 각 운영체제에 맞는 Git 설치 방법을 상세히 안내하고, Git이 여러분을 올바르게 식별하고 선호하는 방식으로 작동하도록 기본적인 사용자 정보를 설정하는 방법을 배울 것입니다. 이 설정을 통해 여러분의 모든 변경 사항(커밋)에 여러분의 이름표가 정확히 붙게 되며, 협업 환경에서 누가 어떤 기여를 했는지 명확히 알 수 있게 됩니다. 자, 그럼 Git을 여러분의 시스템에 설치하고 개인화하는 여정을 시작해볼까요?</p>
+<h2 id="21-git">2.1 Git 설치하기: 운영체제별 가이드</h2>
+<p>Git은 대부분의 운영체제에서 원활하게 작동하도록 설계되었습니다. 여러분의 컴퓨터 환경에 맞춰 Git을 설치하는 방법을 알아보겠습니다.</p>
+<h3 id="211-windows-git">2.1.1 Windows에 Git 설치하기</h3>
+<p>Windows 사용자를 위한 가장 쉽고 권장되는 방법은 공식 웹사이트에서 제공하는 설치 프로그램을 이용하는 것입니다.</p>
+<ol>
+<li><strong>공식 설치 프로그램 다운로드</strong>: 웹 브라우저를 열고 <a href="https://git-scm.com/download/win">Git for Windows 공식 웹사이트</a>에 접속합니다. 자동으로 여러분의 시스템에 맞는 최신 버전의 설치 파일(예: <code>Git-2.xx.x-64-bit.exe</code>)이 다운로드됩니다.</li>
+<li><strong>설치 프로그램 실행</strong>: 다운로드된 <code>.exe</code> 파일을 더블 클릭하여 설치를 시작합니다.</li>
+<li><strong>설치 옵션 선택</strong>: 대부분의 경우 기본 설정을 유지해도 무방하지만, 몇 가지 중요한 옵션은 여러분의 작업 환경에 맞춰 신중하게 선택하는 것이 좋습니다.<ul>
+<li><strong>Select Components (구성 요소 선택)</strong>: 기본값으로 유지하되, 필요에 따라 추가 도구를 설치할 수 있습니다. (예: <code>Git Bash Here</code>, <code>Git GUI Here</code>는 탐색기에서 Git 명령어를 바로 실행하거나 GUI 도구를 띄울 수 있게 해줍니다.)</li>
+<li><strong>Adjusting your PATH environment (PATH 환경 변수 조정)</strong>: 이 설정은 Git 명령어를 어떤 터미널에서 실행할 수 있게 할지 결정합니다.<ul>
+<li><code>Git from the command line and also from 3rd-party software</code> (권장): 이 옵션을 선택하면 Git 명령어를 Windows 명령 프롬프트, PowerShell, 그리고 Visual Studio Code와 같은 기타 터미널 프로그램에서 바로 실행할 수 있게 됩니다. Git을 사용하는 대부분의 경우 이 옵션이 가장 편리하고 유연합니다.</li>
+<li><code>Git from the command line only</code>: 이 옵션을 선택하면 Git 명령어를 Git Bash 터미널에서만 사용할 수 있으며, Windows 명령 프롬프트나 PowerShell에서는 사용할 수 없습니다.</li>
+<li><code>Use Git and optional Unix tools from the Command Prompt</code>: Git과 추가적인 Unix 도구를 사용할 수 있게 하지만, 기존 Windows 도구와 충돌할 가능성이 있어 초보자에게는 권장하지 않습니다.</li>
+</ul>
+</li>
+<li><strong>Choosing the default editor used by Git (Git에서 사용할 기본 편집기 선택)</strong>: Git이 커밋 메시지 작성 등 텍스트 편집이 필요할 때 사용할 편집기를 선택합니다. 드롭다운 메뉴에서 여러분이 선호하는 편집기(예: Visual Studio Code, Notepad++, Vim, Nano)를 선택할 수 있습니다. 이 설정은 나중에 <code>git config</code> 명령어로 변경할 수 있으니 너무 고민할 필요는 없습니다.</li>
+<li><strong>Adjusting the name of the initial branch in new repositories (새 저장소의 초기 브랜치 이름 조정)</strong>:<ul>
+<li><code>Let Git decide</code>: Git의 기본값인 <code>master</code> 브랜치를 사용합니다.</li>
+<li><code>Override the default initial branch name for new repositories</code>: <code>main</code>과 같이 다른 이름을 초기 브랜치로 설정할 수 있습니다. 최근 많은 프로젝트에서 <code>main</code>을 기본 브랜치로 사용하고 있으므로, 이 옵션을 선택하고 <code>main</code>으로 설정하는 것을 권장합니다.</li>
+</ul>
+</li>
+<li><strong>Configuring the line ending conversions (줄바꿈 문자 변환 구성)</strong>: 이 설정은 Windows(CRLF)와 Unix/Linux/macOS(LF) 간의 줄바꿈 문자 차이로 인한 문제를 방지합니다.<ul>
+<li><code>Checkout Windows-style, commit Unix-style line endings</code> (권장): Windows 환경에서 파일을 체크아웃할 때는 CRLF로, Git 저장소에 커밋할 때는 LF로 자동 변환해줍니다. Windows 사용자에게 가장 적합하고 일반적인 설정입니다.</li>
+<li><code>Checkout as-is, commit Unix-style line endings</code>: 체크아웃 시 줄바꿈 문자를 변경하지 않고, 커밋 시에만 LF로 변환합니다.</li>
+<li><code>Checkout as-is, commit as-is</code>: 줄바꿈 문자를 전혀 변환하지 않습니다. 이 경우, 다른 운영체제 사용자들과 협업 시 줄바꿈 문자 차이로 인해 불필요한 변경 사항이 발생할 수 있습니다.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>설치 완료</strong>: 나머지 옵션은 기본값으로 두고 "Next"를 클릭하여 설치를 완료합니다.</li>
+</ol>
+<p>설치가 완료되면, 명령 프롬프트(Command Prompt) 또는 PowerShell을 열고 다음 명령어를 입력하여 Git이 성공적으로 설치되었는지 확인할 수 있습니다.</p>
+<pre><code class="language-bash">git --version
+</code></pre>
+<p>Git 버전 정보가 출력된다면 성공적으로 설치된 것입니다.</p>
+<blockquote>
+<p><strong>팁</strong>:
+*   Chocolatey와 같은 패키지 관리자를 사용하는 경우, 다음 명령어로 Git을 설치할 수도 있습니다: <code>choco install git</code>
+*   <strong>Git Bash의 기본 셸</strong>: Git for Windows 설치 시 함께 설치되는 Git Bash는 기본적으로 MinGW Bash 셸을 사용합니다. 만약 Git Bash 내에서 다른 셸(예: PowerShell)을 기본으로 사용하고 싶다면, Git Bash 바로가기 아이콘의 속성에서 "대상" 필드를 수정하여 시작 프로그램을 변경할 수 있습니다. 하지만 대부분의 경우 Git Bash는 그 자체로 강력한 터미널 환경을 제공하므로, 기본 설정을 유지하는 것이 일반적입니다.</p>
+</blockquote>
+<h3 id="212-macos-git">2.1.2 macOS에 Git 설치하기</h3>
+<p>macOS에서는 여러 가지 방법으로 Git을 설치할 수 있습니다.</p>
+<ol>
+<li>
+<p><strong>Xcode Command Line Tools를 통해 설치</strong>:
+    가장 간단한 방법 중 하나는 Xcode Command Line Tools를 설치하는 것입니다. Git은 이 도구에 포함되어 있습니다. 터미널을 열고 다음 명령어를 입력합니다.
+    <code>bash
+    xcode-select --install</code>
+    설치 메시지가 나타나면 "설치"를 클릭하고 지시를 따릅니다. 이미 설치되어 있다면 "command line tools are already installed" 메시지가 표시됩니다.</p>
+</li>
+<li>
+<p><strong>Homebrew를 통해 설치 (권장)</strong>:
+    Homebrew는 macOS용 패키지 관리자로, 다양한 개발 도구를 쉽게 설치하고 관리할 수 있게 해줍니다. Homebrew가 설치되어 있지 않다면, <a href="https://brew.sh/index_ko">Homebrew 공식 웹사이트</a>에서 설치 방법을 확인하세요. Homebrew 설치 후, 터미널에서 다음 명령어를 입력합니다.
+    <code>bash
+    brew install git</code>
+    Homebrew는 Git의 최신 버전을 자동으로 다운로드하여 설치해줍니다.</p>
+</li>
+</ol>
+<p>설치가 완료되면, 터미널에서 <code>git --version</code> 명령어를 입력하여 Git이 성공적으로 설치되었는지 확인할 수 있습니다. 이는 Windows에서 확인했던 방식과 동일합니다.</p>
+<pre><code class="language-bash">git --version
+</code></pre>
+<h3 id="213-linux-git">2.1.3 Linux에 Git 설치하기</h3>
+<p>대부분의 Linux 배포판은 패키지 관리자를 통해 Git을 쉽게 설치할 수 있도록 지원합니다.</p>
+<ol>
+<li>
+<p><strong>Debian/Ubuntu 기반 시스템</strong>:
+    터미널을 열고 다음 명령어를 입력합니다.
+    <code>bash
+    sudo apt update
+    sudo apt install git</code>
+    <code>sudo apt update</code>는 패키지 목록을 최신 상태로 업데이트하고, <code>sudo apt install git</code>은 Git 패키지를 설치합니다.</p>
+</li>
+<li>
+<p><strong>Fedora 기반 시스템</strong>:
+    <code>bash
+    sudo dnf install git
+    # 또는 구형 Fedora/CentOS/RHEL의 경우
+    # sudo yum install git</code></p>
+</li>
+<li>
+<p><strong>Arch Linux 기반 시스템</strong>:
+    <code>bash
+    sudo pacman -S git</code></p>
+</li>
+</ol>
+<p>설치가 완료되면, 터미널에서 <code>git --version</code> 명령어를 입력하여 Git이 성공적으로 설치되었는지 확인할 수 있습니다. 다른 운영체제와 마찬가지로 Git 버전 정보가 출력되면 성공입니다.</p>
+<pre><code class="language-bash">git --version
+</code></pre>
+<h2 id="22-git-git-config">2.2 Git 기본 설정: <code>git config</code> 명령어 활용</h2>
+<p>Git을 성공적으로 설치했다면, 이제 Git이 여러분의 정체성을 인식하고 여러분의 작업 환경에 맞춰 작동하도록 설정할 차례입니다. 이 모든 설정은 <code>git config</code> 명령어를 통해 이루어집니다.</p>
+<h3 id="221-git-config">2.2.1 <code>git config</code>의 설정 레벨 이해하기</h3>
+<p><code>git config</code> 명령어는 Git의 동작 방식을 사용자 환경에 맞게 조정할 수 있게 해줍니다. 설정은 세 가지 레벨로 적용될 수 있으며, 각 레벨은 적용 범위와 우선순위가 다릅니다.</p>
+<ol>
+<li>
+<p><strong>시스템 레벨 (<code>--system</code>)</strong>:</p>
+<ul>
+<li>적용 범위: 시스템의 모든 사용자, 모든 Git 저장소에 적용됩니다.</li>
+<li>설정 파일: <code>/etc/gitconfig</code> (Linux/macOS) 또는 <code>C:\ProgramData\Git\config</code> (Windows)</li>
+<li>주로 시스템 관리자가 모든 사용자에게 공통으로 적용할 설정을 지정할 때 사용합니다.</li>
+<li>우선순위: 가장 낮습니다.</li>
+</ul>
+</li>
+<li>
+<p><strong>글로벌 레벨 (<code>--global</code>)</strong>:</p>
+<ul>
+<li>적용 범위: 현재 사용자에게만 적용되지만, 해당 사용자가 작업하는 모든 Git 저장소에 적용됩니다.</li>
+<li>설정 파일: <code>~/.gitconfig</code> 또는 <code>~/.config/git/config</code> (사용자 홈 디렉토리)</li>
+<li>대부분의 개인 설정(사용자 이름, 이메일, 기본 편집기 등)은 이 레벨에서 이루어집니다.</li>
+<li>우선순위: 중간입니다.</li>
+</ul>
+</li>
+<li>
+<p><strong>로컬 레벨 (<code>--local</code>)</strong>:</p>
+<ul>
+<li>적용 범위: 특정 Git 저장소에만 적용됩니다.</li>
+<li>설정 파일: 해당 저장소 내의 <code>.git/config</code> 파일</li>
+<li>특정 프로젝트에만 적용되는 특별한 설정(예: 해당 프로젝트에서만 다른 사용자 이름/이메일 사용)을 지정할 때 사용합니다.</li>
+<li>우선순위: 가장 높습니다.</li>
+</ul>
+</li>
+</ol>
+<p>Git은 설정을 적용할 때 로컬, 글로벌, 시스템 순서로 우선순위를 둡니다. 즉, 로컬 설정이 글로벌 설정을 덮어쓰고, 글로벌 설정이 시스템 설정을 덮어씁니다. 특별한 경우가 아니라면, 여러분의 개인 설정은 <strong>글로벌 레벨(<code>--global</code>)</strong>에서 하는 것이 일반적입니다.</p>
+<h3 id="222-username-useremail">2.2.2 사용자 정보 설정: <code>user.name</code>과 <code>user.email</code> (필수!)</h3>
+<p>Git을 사용하면서 가장 먼저, 그리고 가장 중요하게 설정해야 할 것은 바로 여러분의 사용자 이름과 이메일 주소입니다. 이 정보는 여러분이 Git 저장소에 변경 사항을 기록할 때마다(커밋할 때마다) 함께 저장되어, 누가 어떤 변경을 했는지 명확히 보여줍니다. 협업 환경에서는 물론, 개인 프로젝트에서도 변경 이력을 추적하는 데 필수적입니다.</p>
+<ul>
+<li>
+<p><strong><code>user.name</code> 설정</strong>: 여러분의 이름을 설정합니다. 실제 이름이나 닉네임 등 원하는 이름을 사용할 수 있습니다.
+    <code>bash
+    git config --global user.name "Your Name"</code>
+    예시:
+    <code>bash
+    git config --global user.name "Kim Min-jun"</code></p>
+</li>
+<li>
+<p><strong><code>user.email</code> 설정</strong>: 여러분의 이메일 주소를 설정합니다. GitHub와 같은 원격 저장소 서비스에서 여러분의 활동을 식별하고 연결하는 데 사용되므로, 일반적으로 해당 서비스에 등록된 이메일 주소를 사용하는 것이 좋습니다.
+    <code>bash
+    git config --global user.email "your.email@example.com"</code>
+    예시:
+    <code>bash
+    git config --global user.email "minjun.kim@example.com"</code></p>
+</li>
+</ul>
+<blockquote>
+<p><strong>주의</strong>: <code>user.name</code>과 <code>user.email</code>을 설정하지 않으면, Git은 커밋 시 경고 메시지를 표시하고, 경우에 따라 시스템 사용자 이름과 호스트 이름을 사용하여 커밋을 기록할 수 있습니다. 이는 나중에 커밋 작성자를 식별하는 데 혼란을 줄 수 있으므로, 반드시 설정해야 합니다.</p>
+</blockquote>
+<h3 id="223-coreeditor">2.2.3 기본 텍스트 편집기 설정: <code>core.editor</code></h3>
+<p>Git은 커밋 메시지를 작성하거나 리베이스(rebase)와 같은 복잡한 작업을 수행할 때 텍스트 편집기를 필요로 합니다. <code>core.editor</code> 설정을 통해 여러분이 선호하는 편집기를 Git의 기본 편집기로 지정할 수 있습니다.</p>
+<ul>
+<li>
+<p><strong>Visual Studio Code (VS Code)를 기본 편집기로 설정</strong>:
+    <code>bash
+    git config --global core.editor "code --wait"</code>
+    <code>--wait</code> 옵션은 VS Code가 닫힐 때까지 Git이 기다리도록 합니다. 이는 커밋 메시지 작성 후 편집기를 닫아야 Git이 다음 작업을 진행할 수 있도록 하기 위함입니다.</p>
+</li>
+<li>
+<p><strong>Vim을 기본 편집기로 설정</strong>:
+    <code>bash
+    git config --global core.editor "vim"</code></p>
+</li>
+<li>
+<p><strong>Nano를 기본 편집기로 설정</strong>:
+    <code>bash
+    git config --global core.editor "nano"</code></p>
+</li>
+<li>
+<p><strong>다른 편집기</strong>: 여러분이 즐겨 사용하는 다른 편집기가 있다면, 해당 편집기의 실행 명령어와 필요한 옵션을 <code>core.editor</code> 값으로 지정할 수 있습니다.</p>
+</li>
+</ul>
+<h3 id="224-coreautocrlf">2.2.4 줄바꿈 문자 처리 설정: <code>core.autocrlf</code></h3>
+<p>운영체제마다 텍스트 파일의 줄바꿈 문자를 표현하는 방식이 다릅니다.
+*   <strong>Windows</strong>: 캐리지 리턴(Carriage Return, <code>CR</code>)과 라인 피드(Line Feed, <code>LF</code>)를 함께 사용하여 <code>CRLF</code>로 줄바꿈을 표현합니다. (<code>\r\n</code>)
+*   <strong>Unix/Linux/macOS</strong>: 라인 피드(<code>LF</code>)만 사용하여 줄바꿈을 표현합니다. (<code>\n</code>)</p>
+<p>이러한 차이는 여러 운영체제에서 개발자들이 협업할 때 문제를 일으킬 수 있습니다. 예를 들어, Windows에서 작업한 파일을 Linux 개발자가 열면 줄바꿈 문자가 다르게 인식되어 모든 줄이 한 줄로 보이거나, Git이 줄바꿈 문자만 변경되었음에도 모든 줄이 변경된 것처럼 인식하여 불필요한 변경 사항으로 표시될 수 있습니다.</p>
+<p><code>core.autocrlf</code> 설정은 이 문제를 자동으로 처리해줍니다.</p>
+<ul>
+<li>
+<p><strong>Windows 사용자 (권장)</strong>:
+    <code>bash
+    git config --global core.autocrlf true</code>
+    이 설정은 Git이 저장소(Repository)에 파일을 커밋할 때 <code>CRLF</code>를 <code>LF</code>로 자동 변환하고, 저장소에서 파일을 체크아웃(Checkout)할 때 <code>LF</code>를 <code>CRLF</code>로 자동 변환합니다. 이렇게 하면 Git 저장소에는 항상 <code>LF</code> 형식으로 통일된 줄바꿈 문자가 저장되어, 다른 운영체제 사용자들과의 호환성을 높일 수 있습니다.</p>
+</li>
+<li>
+<p><strong>macOS/Linux 사용자 (권장)</strong>:
+    <code>bash
+    git config --global core.autocrlf input</code>
+    이 설정은 Git이 저장소에 파일을 커밋할 때 <code>CRLF</code>가 발견되면 <code>LF</code>로 변환하지만, 체크아웃 시에는 줄바꿈 문자를 변환하지 않습니다. Unix/Linux/macOS 환경에서는 기본적으로 <code>LF</code>를 사용하므로, 체크아웃 시 변환이 필요 없습니다. <code>CRLF</code>가 실수로 유입되었을 경우에만 <code>LF</code>로 변환하여 저장소의 일관성을 유지하는 역할을 합니다.</p>
+</li>
+<li>
+<p><strong>줄바꿈 자동 변환을 원하지 않을 때</strong>:
+    <code>bash
+    git config --global core.autocrlf false</code>
+    이 설정은 줄바꿈 문자를 전혀 변환하지 않습니다. 특수한 경우에만 사용하며, 일반적으로는 권장하지 않습니다.</p>
+</li>
+</ul>
+<blockquote>
+<p><strong>오해 풀기</strong>: <code>core.autocrlf</code> 설정을 간과하면, 다른 운영체제에서 작업한 동료가 커밋한 파일에서 줄바꿈 문자만 달라졌을 뿐인데 Git은 모든 줄이 변경되었다고 표시하는 "유령 변경"을 보게 될 수 있습니다. 이는 불필요한 충돌을 유발하고 코드 리뷰를 어렵게 만듭니다. 반드시 자신의 운영체제에 맞는 설정을 적용하세요.</p>
+</blockquote>
+<h3 id="225-initdefaultbranch">2.2.5 새 저장소의 기본 브랜치 이름 설정: <code>init.defaultBranch</code></h3>
+<p>과거 Git 저장소를 처음 생성할 때 기본 브랜치 이름은 <code>master</code>였습니다. 하지만 최근에는 많은 프로젝트와 커뮤니티에서 더 포괄적인 용어인 <code>main</code>을 기본 브랜치 이름으로 사용하도록 권장하고 있습니다. Git은 이 설정을 통해 새로운 저장소를 만들 때 기본 브랜치 이름을 지정할 수 있게 해줍니다.</p>
+<pre><code class="language-bash">git config --global init.defaultBranch main
+</code></pre>
+<p>이 설정을 적용하면, 앞으로 <code>git init</code> 명령어로 새로운 저장소를 만들 때 <code>master</code> 대신 <code>main</code> 브랜치가 초기 브랜치로 생성됩니다.</p>
+<h3 id="226">2.2.6 기타 유용한 설정</h3>
+<ul>
+<li>
+<p><strong>컬러 UI 활성화 (<code>color.ui</code>)</strong>:
+    Git 명령어를 실행할 때 출력되는 메시지에 색상을 입혀 가독성을 높여줍니다. 기본적으로 <code>auto</code>로 설정되어 터미널이 색상을 지원하면 자동으로 활성화됩니다.
+    <code>bash
+    git config --global color.ui auto</code></p>
+</li>
+<li>
+<p><strong>별칭 설정 (<code>alias</code>)</strong>:
+    자주 사용하는 Git 명령어를 짧은 별칭으로 만들어 편리하게 사용할 수 있습니다. 예를 들어, <code>git status</code>를 <code>git st</code>로 줄여 쓸 수 있습니다. 이 기능은 매우 유용하지만, 지금 당장은 필수가 아니므로 다음 장에서 더 자세히 다루겠습니다.</p>
+</li>
+</ul>
+<h2 id="23">2.3 설정 확인하기</h2>
+<p>지금까지 설정한 내용들이 제대로 적용되었는지 확인하는 것은 매우 중요합니다. <code>git config</code> 명령어를 통해 현재 Git에 적용된 모든 설정을 확인하거나, 특정 설정값만 조회할 수 있습니다.</p>
+<ul>
+<li>
+<p><strong>모든 설정 확인</strong>:
+    현재 Git에 적용된 모든 설정(시스템, 글로벌, 로컬)을 우선순위에 따라 나열하여 보여줍니다.
+    <code>bash
+    git config --list</code>
+    이 명령어를 실행하면 다음과 유사한 출력을 볼 수 있습니다 (설정 내용과 순서는 다를 수 있습니다):
+    <code>user.name=Kim Min-jun
+    user.email=minjun.kim@example.com
+    core.editor="code --wait"
+    core.autocrlf=true
+    init.defaultbranch=main
+    color.ui=auto
+    ...</code></p>
+</li>
+<li>
+<p><strong>특정 설정 확인</strong>:
+    특정 설정 항목의 값만 확인하고 싶을 때 사용합니다.
+    <code>bash
+    git config user.name
+    git config user.email
+    git config core.editor</code>
+    예시:
+    <code>bash
+    $ git config user.name
+    Kim Min-jun</code></p>
+</li>
+</ul>
+<h3 id="_1">💡 잠시 멈추고 생각하기</h3>
+<p>여러분은 성공적으로 Git을 설치하고 기본적인 설정을 마쳤습니다. 이제 터미널을 열어 <code>git config --list</code> 명령어를 실행하고, 여러분이 설정한 <code>user.name</code>, <code>user.email</code>, <code>core.editor</code>, <code>core.autocrlf</code>, <code>init.defaultBranch</code> 값이 올바르게 표시되는지 확인해보세요. 만약 잘못된 부분이 있다면, 해당 설정 명령어를 다시 실행하여 수정할 수 있습니다.</p>
+<p>이 과정은 Git과의 첫 대화이자 여러분의 개발 환경을 Git에 맞게 최적화하는 중요한 단계입니다. 모든 설정이 완벽하게 이루어졌다면, 이제 Git을 사용하여 본격적으로 버전 관리를 시작할 준비가 된 것입니다!</p>
+<h2 id="24">2.4 요약 및 다음 단계</h2>
+<p>이번 장에서는 Git을 사용하기 위한 가장 기본적인 준비 과정인 설치와 설정을 완료했습니다.</p>
+<ul>
+<li><strong>Git 설치</strong>: Windows, macOS, Linux 각 운영체제에 맞는 Git 설치 방법을 알아보았고, <code>git --version</code> 명령어를 통해 설치를 확인했습니다.</li>
+<li><strong>Git 기본 설정</strong>: <code>git config</code> 명령어를 사용하여 Git의 동작 방식을 개인화하는 방법을 배웠습니다. 특히, 모든 커밋에 기록될 여러분의 <strong>사용자 이름(<code>user.name</code>)</strong>과 <strong>이메일 주소(<code>user.email</code>)</strong> 설정의 중요성을 강조했습니다.</li>
+<li><strong>핵심 설정</strong>: 이외에도 Git이 사용할 <strong>기본 텍스트 편집기(<code>core.editor</code>)</strong>, 운영체제 간의 <strong>줄바꿈 문자 불일치 문제(<code>core.autocrlf</code>)</strong> 해결, 그리고 <strong>새 저장소의 기본 브랜치 이름(<code>init.defaultBranch</code>)</strong> 설정 방법을 익혔습니다.</li>
+<li><strong>설정 확인</strong>: <code>git config --list</code> 명령어를 통해 현재 적용된 모든 설정을 확인하는 방법도 배웠습니다.</li>
+</ul>
+<p>이제 여러분의 시스템은 Git 명령어를 받아들일 준비가 완료되었습니다. 여러분은 Git과 소통할 수 있는 기본적인 환경을 구축한 것입니다. 다음 장에서는 이 준비된 환경 위에서 실제 Git 저장소(Repository)를 만들고, 파일을 추가하며, 첫 번째 커밋을 생성하는 등 Git의 가장 기본적인 버전 관리 흐름을 실습해볼 것입니다. 드디어 코드를 Git으로 관리하는 첫 발을 내딛게 됩니다!</p>
+
+            <nav class="chapter-nav">
+                
+                
+                
+                
+                
+                    
+                    
+                
+                    
+                    
+                
+                    
+                    
+                
+                    
+                    
+                
+                    
+                    
+                
+                    
+                    
+                
+                    
+                    
+                
+                
+                    <a href="chapter-01.html">&larr; 이전 챕터</a>
+                
+                
+                    <a href="chapter-03.html">다음 챕터 &rarr;</a>
+                
+            </nav>
+        </article>
+    </div>
+</body>
+</html>

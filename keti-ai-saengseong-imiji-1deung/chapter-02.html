@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>제2장: 승리의 기술: 경량화, 최적화, 설명 가능성의 통합 - KETI AI 생성 이미지 1등</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: "Noto Sans KR", system-ui, sans-serif; background: #fff; color: #333; }
+        .layout { display: flex; min-height: 100vh; }
+        .sidebar { width: 260px; background: #f8f9fa; border-right: 1px solid #e0e0e0; padding: 1.5rem; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+        .sidebar h3 { font-size: 1rem; margin-bottom: 1rem; }
+        .sidebar h3 a { color: #1a1a2e; text-decoration: none; }
+        .sidebar ul { list-style: none; }
+        .sidebar li { margin-bottom: 0.4rem; }
+        .sidebar a { color: #555; text-decoration: none; font-size: 0.9rem; display: block; padding: 0.3rem 0.5rem; border-radius: 4px; }
+        .sidebar a:hover { background: #e8e8e8; }
+        .sidebar a.active { background: #1a1a2e; color: #fff; }
+        .sidebar .back { margin-top: 1.5rem; font-size: 0.85rem; }
+        .content { flex: 1; padding: 2rem 3rem; max-width: 800px; }
+        .content h1 { font-size: 1.8rem; margin-bottom: 1rem; border-bottom: 2px solid #e0e0e0; padding-bottom: 0.5rem; }
+        .content h2 { font-size: 1.4rem; margin-top: 2rem; margin-bottom: 0.8rem; }
+        .content h3 { font-size: 1.15rem; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+        .content p { line-height: 1.8; margin-bottom: 1rem; }
+        .content ul, .content ol { margin: 1rem 0 1rem 2rem; line-height: 1.8; }
+        .content blockquote { border-left: 4px solid #e94560; padding-left: 1rem; margin: 1rem 0; color: #666; }
+        .content code { background: #f0f0f0; padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.9em; }
+        .content pre { background: #1a1a2e; color: #e0e0e0; padding: 1rem; border-radius: 8px; overflow-x: auto; margin: 1rem 0; }
+        .content pre code { background: none; padding: 0; }
+        .chapter-nav { display: flex; justify-content: space-between; margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #e0e0e0; }
+        .chapter-nav a { color: #1a1a2e; text-decoration: none; }
+        .chapter-nav a:hover { color: #e94560; }
+        @media (max-width: 768px) {
+            .layout { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; position: static; }
+            .content { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <nav class="sidebar">
+            <h3><a href="../index.html">KETI AI 생성 이미지 1등</a></h3>
+            <ul>
+                
+                <li>
+                    <a href="chapter-01.html"
+                       >
+                        1. 도전의 시작: IEEE 저전력 컴퓨터 비전 챌린지의 의미
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="chapter-02.html"
+                       class="active">
+                        2. 제2장: 승리의 기술: 경량화, 최적화, 설명 가능성의 통합
+                    </a>
+                </li>
+                
+            </ul>
+            <div class="back">
+                <a href="../index.html">&larr; 도서관으로</a>
+            </div>
+        </nav>
+
+        <article class="content">
+            <h1 id="2">제2장: 승리의 기술: 경량화, 최적화, 설명 가능성의 통합</h1>
+<h2 id="_1">세 개의 산을 동시에 오르기</h2>
+<p>AI 생성 이미지를 정확히 탐지하는 것만으로는 충분하지 않다. 스마트폰 속 카메라가 실시간으로 영상을 처리해야 하고, 자율주행차가 도로 위에서 신뢰할 수 없는 센서 신호를 즉각 거부해야 하며, 로봇이 배터리 몇 시간으로 연속 작동해야 하는 현실 속에서, 우리가 마주하는 도전은 단순한 정확도 문제가 아니다.</p>
+<p>KETI 연구진이 CVPR IEEE 저전력 컴퓨터 비전 챌린지에서 1위를 차지한 이유는 세 가지 산을 동시에 오르는 데 성공했기 때문이다. <strong>경량화(Lightweight), 최적화(Optimization), 설명 가능성(Explainability)</strong> — 이 세 가지 기술이 어떻게 통합되었는지 이해하는 것이 이 장의 핵심이다.</p>
+<h2 id="_2">첫 번째 산: 모델 경량화의 기술</h2>
+<h3 id="_3">경량화란 무엇인가?</h3>
+<p>경량화는 단순히 모델을 "작게" 만드는 것이 아니다. 이는 제한된 자원 환경에서 최대한의 성능을 유지하면서 계산 복잡도를 줄이는 <strong>지능형 구조 설계</strong>이다.</p>
+<p>기존의 고성능 AI 생성 이미지 탐지 모델들은 수십억 개의 파라미터를 가지고 있었다. CLIP(Contrastive Language-Image Pre-training)이나 BLIP(Bootstrapping Language-Image Pre-training) 같은 비전-언어 모델(VLM)은 수십억 파라미터로 구성되어 있으며, 이들을 엣지 디바이스에 탑재하려면 수십 GB의 메모리가 필요했다. 스마트폰은 보통 4-8GB의 RAM을 가지고 있고, 임베디드 시스템은 그보다 훨씬 적다.</p>
+<p>KETI가 적용한 경량화 기법은 세 가지 축으로 구성된다.</p>
+<h4 id="1-knowledge-distillation">1. 지식 증류(Knowledge Distillation)</h4>
+<p>지식 증류는 대형 모델(교사 모델)이 학습한 지식을 소형 모델(학생 모델)에게 전이하는 기법이다. 단순히 최종 예측값만 전달하는 것이 아니라, 모델이 어떻게 생각하는지 그 <strong>과정</strong>을 배우게 한다.</p>
+<p>KETI 연구진은 다음과 같은 방식을 적용했다:</p>
+<ul>
+<li><strong>교사 모델</strong>: 고성능 VLM(예: BLIP-2)으로 훈련</li>
+<li><strong>학생 모델</strong>: 파라미터 수를 1/10 이하로 축소한 경량 모델</li>
+<li><strong>지식 전이</strong>: 교사 모델의 중간 계층(intermediate layer) 활성화 값을 학생 모델이 모방하도록 훈련</li>
+</ul>
+<p>실제 결과는 놀라웠다. 교사 모델이 95% 정확도를 달성했을 때, 파라미터 수를 90% 감소시킨 학생 모델도 91-93% 정확도를 유지했다. 이는 "경량화 = 성능 저하"라는 통념을 깨뜨리는 결과였다.</p>
+<h4 id="2-quantization">2. 양자화(Quantization)</h4>
+<p>양자화는 모델의 파라미터를 더 낮은 정밀도로 표현하는 기법이다. 일반적으로 신경망의 가중치는 32비트 부동소수점(float32)으로 저장된다. 양자화를 통해 이를 8비트 정수(int8)나 4비트로 축소할 수 있다.</p>
+<p>이것이 얼마나 효과적인지 다음 표를 보면 명확하다:</p>
+<table>
+<thead>
+<tr>
+<th>정밀도</th>
+<th>메모리 크기</th>
+<th>추론 속도</th>
+<th>정확도 손실</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Float32</td>
+<td>1.0x</td>
+<td>1.0x</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Float16</td>
+<td>0.5x</td>
+<td>1.5–2.0x</td>
+<td>~0.5%</td>
+</tr>
+<tr>
+<td>Int8</td>
+<td>0.25x</td>
+<td>2.5–4.0x</td>
+<td>~1–2%</td>
+</tr>
+<tr>
+<td>Int4</td>
+<td>0.125x</td>
+<td>3–5x</td>
+<td>~2–4%</td>
+</tr>
+</tbody>
+</table>
+<p>KETI는 <strong>동적 양자화(dynamic quantization)</strong>와 <strong>정적 양자화(static quantization)</strong>를 혼합 적용했다. 모델의 초기 계층은 정보 손실이 크므로 float16으로 유지하고, 후기 계층은 int8로 양자화했다. 결과적으로 메모리 사용량은 75% 감소했지만, 정확도는 단 1%만 하락했다.</p>
+<h4 id="3-pruning">3. 프루닝(Pruning)</h4>
+<p>프루닝은 신경망에서 덜 중요한 연결을 제거하는 기법이다. 인간의 뇌도 발달 과정에서 불필요한 신경 연결을 제거하는데, 이와 유사한 원리다.</p>
+<p>KETI 연구진은 <strong>구조적 프루닝(structured pruning)</strong>을 적용했다. 개별 가중치가 아니라 전체 뉴런이나 채널을 제거하는 방식으로, 하드웨어 가속에 더 유리하다.</p>
+<p>예를 들어, 원본 모델이 64개의 채널을 가진 컨볼루션 계층을 가지고 있었다면, 프루닝 후에는 32개 또는 16개로 축소된다. 이렇게 하면 단순히 연산량이 줄어드는 것뿐 아니라, 메모리 접근 패턴도 개선되어 실제 하드웨어에서의 성능 향상이 더 크다.</p>
+<p>세 기법의 조합으로, KETI는 원본 모델 대비 <strong>모델 크기 87% 감소, 추론 시간 73% 단축</strong>을 달성했다.</p>
+<h2 id="_4">두 번째 산: 저전력 추론 최적화</h2>
+<h3 id="_5">에너지 효율성이 왜 중요한가?</h3>
+<p>경량화된 모델도 여전히 에너지를 소비한다. 엣지 디바이스의 배터리는 유한하다. 스마트폰에서 1초에 1W를 소비하는 모델이 있다면, 4000mAh 배터리는 단 1-2시간 만에 방전된다.</p>
+<p>KETI의 저전력 최적화는 다음 세 가지 영역을 포함한다.</p>
+<h4 id="_6">메모리 계층 최적화</h4>
+<p>데이터를 메모리에서 꺼내오는 것 자체가 연산보다 더 많은 에너지를 소비한다. 현대 프로세서에서 메인 메모리에 접근하는 데 드는 에너지는 간단한 부동소수점 연산의 100-1000배에 달한다.</p>
+<p>KETI 연구진은 <strong>타일화(tiling)</strong> 기법을 적용했다. 모델의 계산을 작은 블록 단위로 나누어, CPU 캐시에 들어갈 수 있는 데이터만 처리하도록 재구성했다.</p>
+<p>구체적으로, 이미지 크기 224×224 픽셀의 입력을 처리할 때:</p>
+<ul>
+<li><strong>기존 방식</strong>: 전체 이미지를 메모리에 로드 → 계산 → 결과 저장</li>
+<li><strong>타일화 방식</strong>: 56×56 픽셀 블록 16개로 나눔 → 각 블록을 캐시에 로드 → 계산 → 결과 누적</li>
+</ul>
+<p>이 방식으로 메모리 대역폭 요구량을 40% 감소시켰고, 결과적으로 전력 소비는 32% 줄어들었다.</p>
+<h4 id="batch-normalization-folding">배치 정규화 폴딩(Batch Normalization Folding)</h4>
+<p>신경망의 배치 정규화(Batch Normalization) 계층은 훈련 중에는 필수적이지만, 추론 단계에서는 이전 계층의 가중치에 통합할 수 있다. 이를 "폴딩"이라 한다.</p>
+<p>예를 들어:</p>
+<pre><code>y = BatchNorm(Conv(x))
+</code></pre>
+<p>이를 다음과 같이 변환할 수 있다:</p>
+<pre><code>y = Conv'(x)  // Conv의 가중치가 이미 정규화를 포함
+</code></pre>
+<p>이 단순한 변환으로 추론 시 배치 정규화 연산이 완전히 제거되어, 각 이미지당 약 5-8% 추론 시간 단축과 함께 메모리 접근 패턴이 개선된다.</p>
+<h4 id="adaptive-precision">연산 정밀도 적응(Adaptive Precision)</h4>
+<p>모든 계층이 동일한 정밀도로 연산할 필요는 없다. KETI는 <strong>계층별 적응형 정밀도</strong>를 도입했다:</p>
+<ul>
+<li><strong>초기 계층(특징 추출)</strong>: float16 — 입력 이미지의 다양한 특징을 포착하는 데 높은 정밀도 필요</li>
+<li><strong>중간 계층(특징 결합)</strong>: int8 — 특징 결합에는 낮은 정밀도로도 충분</li>
+<li><strong>최종 계층(분류)</strong>: int8 또는 int4 — 이진 분류(생성/실제)에는 매우 낮은 정밀도로도 가능</li>
+</ul>
+<p>이 접근법으로 평균 전력 소비를 28% 감소시키면서도 정확도는 유지했다.</p>
+<h3 id="_7">실제 디바이스에서의 성능</h3>
+<p>KETI 연구진은 다양한 엣지 디바이스에서 최적화를 검증했다:</p>
+<table>
+<thead>
+<tr>
+<th>디바이스</th>
+<th>메모리</th>
+<th>추론 시간</th>
+<th>전력 소비</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Snapdragon 8 Gen2</td>
+<td>8GB</td>
+<td>45ms</td>
+<td>0.8W</td>
+</tr>
+<tr>
+<td>Apple Neural Engine</td>
+<td>—</td>
+<td>38ms</td>
+<td>0.6W</td>
+</tr>
+<tr>
+<td>Qualcomm Hexagon</td>
+<td>1GB</td>
+<td>120ms</td>
+<td>0.4W</td>
+</tr>
+<tr>
+<td>Raspberry Pi 4</td>
+<td>4GB</td>
+<td>850ms</td>
+<td>0.2W</td>
+</tr>
+</tbody>
+</table>
+<p>심지어 저사양 임베디드 시스템인 라즈베리파이 4에서도 850ms 내에 추론을 완료할 수 있었다. 이는 초당 1장 이상의 이미지를 처리 가능함을 의미한다.</p>
+<h2 id="ai">세 번째 산: 설명 가능한 AI의 통합</h2>
+<h3 id="xai">XAI가 필수인 이유</h3>
+<p>정확도 95%의 모델이 어떤 이미지를 "생성됨"이라 판단했을 때, 우리는 왜 그렇게 결정했는지 알아야 한다. 특히 중요한 의사결정 상황에서는 더욱 그렇다.</p>
+<p>자율주행차가 도로 위의 신호를 "합성 신호"라고 판단하거나, 로봇이 물체를 "가짜"라고 인식한다면, 그 근거를 제시할 수 있어야 한다. 이것이 설명 가능한 AI(XAI, Explainable AI)이다.</p>
+<h3 id="keti-xai">KETI의 XAI 구현 전략</h3>
+<p>일반적으로 XAI는 추가 오버헤드로 여겨진다. 하지만 KETI는 XAI를 모델 구조의 <strong>핵심 요소</strong>로 설계했다.</p>
+<h4 id="1-hierarchical-attention-mechanism">1. 계층적 어텐션 메커니즘(Hierarchical Attention Mechanism)</h4>
+<p>비전-언어 모델의 강점은 이미지의 특정 영역과 언어 설명을 연결할 수 있다는 것이다. KETI는 이를 경량화된 모델에도 적용했다:</p>
+<pre><code>입력 이미지 → 특징 추출 → 다중 스케일 특징 → 어텐션 가중치 계산
+                                              ↓
+                                        중요 영역 강조
+                                              ↓
+                                        분류 결정 + 설명 생성
+</code></pre>
+<p>어텐션 메커니즘은 모델이 이미지의 어느 부분을 보고 판단했는지 시각화할 수 있다. 예를 들어, AI 생성 이미지 탐지 모델이 어떤 이미지를 "생성됨"이라 판단했다면, 그 이유가 되는 영역(예: 부자연스러운 손가락, 이상한 배경 텍스처)이 하이라이트되어 표시된다.</p>
+<p>특히 KETI는 <strong>다중 헤드 어텐션(multi-head attention)</strong>을 사용했다. 서로 다른 관점에서 이미지를 분석하는 여러 어텐션 헤드가 각각 다른 특징에 주목한다. 하나의 헤드는 얼굴의 부자연스러움을, 다른 헤드는 조명의</p>
+
+            <nav class="chapter-nav">
+                
+                
+                
+                
+                
+                    
+                    
+                
+                    
+                    
+                
+                
+                    <a href="chapter-01.html">&larr; 이전 챕터</a>
+                
+                
+                    <span></span>
+                
+            </nav>
+        </article>
+    </div>
+</body>
+</html>
