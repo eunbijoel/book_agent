@@ -5,6 +5,8 @@
 
 [Library: 생성된 책 모아보기](https://eunbijoel.github.io/book_agent/)
 
+브라우저: http://127.0.0.1:8080
+
 ## 프로젝트 구조
 
 ```
@@ -41,7 +43,7 @@ book_agent/
 
 ---
 
-## 두 가지 사용법
+## 빠른 시작
 
 ### 1. 웹 UI (권장)
 
@@ -52,29 +54,29 @@ uvicorn web.app:app --reload --port 8080
 
 브라우저에서 `http://localhost:8080` 접속:
 
-
 | 페이지                                   | 기능                            |
 | ------------------------------------- | ----------------------------- |
 | **Dashboard** `/`                     | TOC 수, 생성된 책 수, 실행 중 작업 현황    |
 | **TOC 관리** `/toc/`                    | 목차 생성·수정·삭제, 챕터 동적 추가/제거      |
-| **Pipeline** `/pipeline/`             | Ollama 모델 선택, TOC 선택, 책 생성 실행 |
-| **작업 로그** `/pipeline/job/{id}`        | WebSocket 실시간 로그 스트리밍         |
+| **Pipeline** `/pipeline/`             | 프로바이더·모델·TOC 선택 후 책 생성 |
+| **작업 로그** `/pipeline/job/{id}`        | WebSocket 실시간 로그         |
 | **Outputs** `/outputs/`               | 생성된 책 조회·삭제                   |
-| **Reader** `/reader/{slug}/{chapter}` | 챕터별 읽기 뷰 (이전/다음 내비게이션)        |
+| **Reader** `/reader/{slug}/{chapter}` | 챕터별 읽기     |
 
 
 ### 2. CLI
 
 ```bash
-# 목차 파일로 실행
-python3 main.py --toc toc/tips-kazakhstan.json --model gemma4:31b
+# 주제만으로 생성
+python3 main.py --provider gemini --topic "주제" --lang ko --test-mode
 
-# 주제만 던져서 실행
-python3 main.py --topic "주제" --lang ko --test-mode
+# HTML/파일 소스 기반 생성
+python3 main.py --provider claude \
+  --input-file agent/inputs/page.html \
+  --topic "반도체 AI 어시스턴트 가이드" --chapters 3 --test-mode
 
-# 백그라운드 실행
-nohup python3 main.py --toc toc/tips-kazakhstan.json --model gemma4:31b \
-  > outputs/run.log 2>&1 &
+# TOC JSON 사용
+python3 main.py --provider ollama --toc ./my-toc.json --model qwen2.5:7b
 ```
 
 ---
@@ -84,191 +86,72 @@ nohup python3 main.py --toc toc/tips-kazakhstan.json --model gemma4:31b \
 ```mermaid
 graph LR
     subgraph INPUT["입력"]
-        TOC["toc/*.json"]
-        WEBUI["웹 UI<br/>or CLI"]
+        TOC["TOC JSON"]
+        SRC["URL / 파일"]
+        UI["웹 UI / CLI"]
     end
 
-    subgraph AGENT["agent/ — 책 생성 엔진"]
+    subgraph AGENT["agent/"]
         MAIN["main.py"]
-        BW["book_workflow"]
-        CW["chapter_workflow"]
-        AG["agents 6개"]
-        OM["output_manager"]
-        OLLAMA["Ollama LLM"]
+        INP["inputs/"]
+        BW["workflows"]
+        PRV["providers/"]
     end
 
-    subgraph OUTPUT["outputs/"]
-        CH["chapter-NN.md"]
-        REP["book_report.json"]
-        FINAL["book_final.md"]
+    subgraph OUT["outputs/"]
+        CH["chapters"]
+        EVAL["evaluations"]
     end
 
-    subgraph WEB["web/ — 웹 관리 앱"]
+    subgraph WEB["web/ :8080"]
         DASH["Dashboard"]
-        PIPE["Pipeline 실행"]
-        READ["Reader 뷰"]
     end
 
-    subgraph LIBRARY["library/ — 정적 사이트"]
-        GEN["generator.py"]
+    subgraph LIB["library/"]
         GHP["GitHub Pages"]
     end
 
     TOC --> MAIN
-    WEBUI -->|subprocess| MAIN
-    MAIN --> BW --> CW --> AG --> OLLAMA
-    CW --> OM --> CH
-    OM --> REP
-    OM --> FINAL
-
-    CH --> READ
-    CH --> GEN --> GHP
-    PIPE -->|WebSocket 로그| MAIN
+    SRC --> INP --> MAIN
+    UI --> MAIN
+    MAIN --> BW --> PRV --> CH
+    CH --> EVAL
+    CH --> DASH
+    CH --> LIB --> GHP
 ```
 ### Book Writing Agent 실행 페이지 
 <img width="1207" height="791" alt="image" src="https://github.com/user-attachments/assets/ac1291db-901c-45f3-91ca-f9fe65b5e3e4" />
 
 ---
 
-## 에이전트 구조
-
-총 6개의 에이전트가 순서대로, 그리고 서로 보완하며 동작합니다.
+## 에이전트 파이프라인
 
 ```
-[기획] → 챕터 설계 전달
-         ↓
-[조사] → 사실 자료 수집
-         ↓
-[작성] → 초고 생성
-         ↓
-[검토] → 문제 발견 시 [작성]으로 되돌림 (최대 2회)
-         ↓
-[편집] → 스타일 다듬기
-         ↓
-[평가] → 점수 55점 미만이면 [작성]으로 되돌림 (최대 2회)
-         ↓
-       챕터 완성 → 다음 챕터로
+[기획] → [조사] → [작성] → [검토] ⇄ [작성] → [편집] → [평가] ⇄ [작성] → 챕터 완료
 ```
 
-
-| 에이전트               | 역할                         | 파일                                |
-| ------------------ | -------------------------- | --------------------------------- |
-| **기획** (Planning)  | 챕터 순서, 목적, 핵심 개념, 톤/문체 설계  | `agent/agents/planning_agent.py`  |
-| **조사** (Research)  | 챕터별 사실, 배경, 예시 수집. 환각 방지   | `agent/agents/research_agent.py`  |
-| **작성** (Writing)   | 조사 결과 + 기획안 기반 초고 작성       | `agent/agents/writing_agent.py`   |
-| **검토** (Reviewer)  | 사실 오류, 일관성, 누락, 반복 검토      | `agent/agents/reviewer_agent.py`  |
-| **편집** (Editor)    | 문장 다듬기. 사실은 안 바꾸고 가독성만 개선  | `agent/agents/editor_agent.py`    |
-| **평가** (Evaluator) | 0~100점 채점. 55점 미만 시 재작성 요청 | `agent/agents/evaluator_agent.py` |
-
+| 에이전트 | 역할 | 파일 |
+|----------|------|------|
+| Planning | 챕터 설계, 톤·구조 | `agent/agents/planning_agent.py` |
+| Research | 사실·배경 수집 | `agent/agents/research_agent.py` |
+| Writing | 초고 작성 | `agent/agents/writing_agent.py` |
+| Reviewer | 사실·일관성 검토 | `agent/agents/reviewer_agent.py` |
+| Editor | 문체 다듬기 | `agent/agents/editor_agent.py` |
+| Evaluator | 0~100점 채점, 55점 미만 재작성 | `agent/agents/evaluator_agent.py` |
 
 ---
+## 평가 시스템
 
-## 목차 파일 형식 (TOC)
+URL/파일 입력 시 **소스 충실도(faithfulness)** 평가가 추가됩니다.
 
-`toc/` 디렉토리에 JSON으로 저장합니다. 웹 UI에서도 생성/수정할 수 있습니다.
+| 구분 | 내용 |
+|------|------|
+| **LLM 품질** | G-Eval 스타일 6차원 (content, coherence, coverage, clarity, engagement, relevance) |
+| **정량 메트릭** | 목표 단어수 비율, TTR, 5-gram 반복률 |
+| **소스 충실도** | URL/파일 입력 시 — 환각·누락·핵심 포인트 커버리지 |
+| **최종 점수** | LLM 70% + 정량 보정 30% |
 
-```json
-{
-  "title": "책 제목",
-  "description": "책 설명",
-  "language": "Korean",
-  "words_per_chapter": "3000-5000",
-  "writing_guidelines": [
-    "구체적인 예시를 포함할 것",
-    "전문 용어는 처음 등장할 때 반드시 설명할 것"
-  ],
-  "chapters": [
-    {
-      "number": 1,
-      "title": "챕터 제목",
-      "description": "이 챕터에서 다루는 내용"
-    }
-  ]
-}
-```
----
-
-## 결과물 구조
-
-```
-outputs/
-└── 책-제목-슬러그/
-    ├── chapter-01-챕터제목.md       ← 완성된 챕터 (YAML frontmatter 포함)
-    ├── chapter-01-evaluation.json   ← 챕터별 품질 점수 상세
-    ├── book_report.json             ← 책 전체 품질 리포트
-    ├── .progress.json               ← 진행 상황 (중단 후 재개 가능)
-    └── book-writer.log              ← 실행 로그
-```
-
----
-
-## 도서관 및 에이전트 실행 페이지
-
-```bash
-uvicorn web.app:app --reload --host 127.0.0.1 --port 8080 #에이전트 실행
-
-python3 library/generator.py --outputs outputs --out library_site # 도서관 사이트 생성
-```
-
-Book Agent Dashboard에서 책 수정, 생성, 저장 후->
-도서관 랜딩 페이지에서 모든 책이 카드 형태로 표시되고, 클릭하면 챕터별로 읽을 수 있습니다.
-
----
-
-## 설치
-
-```bash
-# 기본 (CLI만 사용)
-pip install -e .
-
-# 웹 UI 포함
-pip install -e ".[web]"
-
-# MkDocs 퍼블리셔 포함
-pip install -e ".[publish]"
-
-# 개발 (테스트)
-pip install -e ".[dev]"
-```
-
----
-
-## 버전 히스토리
-
-
-| 항목      | v1         | v2          | v3 (현재)                  |
-| ------- | ---------- | ----------- | ------------------------ |
-| 프레임워크   | Google ADK | LangGraph   | LangGraph                |
-| 에이전트 수  | 4개 (단순 순서) | 6개 + 조건부 흐름 | 6개 + 조건부 흐름              |
-| 조사 기능   | 없음         | 조사 에이전트     | 조사 에이전트                  |
-| 기본 모델   | —          | qwen2.5:7b  | gemma4:31b               |
-| 기본 언어   | English    | English     | Korean                   |
-| 웹 UI    | 없음         | 없음          | FastAPI + Jinja2         |
-| 도서관     | 없음         | MkDocs 단일 책 | 정적 HTML 멀티 책             |
-| 프로젝트 구조 | 단일 폴더      | 단일 폴더       | agent / web / library 분리 |
-| TOC 관리  | 수동 JSON 편집 | 수동 JSON 편집  | 웹 폼으로 생성/수정              |
-| 실시간 로그  | 터미널        | 터미널         | WebSocket 스트리밍           |
-| 출력물 관리  | 수동         | 수동          | 웹에서 조회/삭제                |
-
-
----
-
-0615 업데이트 (구현 완료):
-
-### - 멀티 프로바이더 완성
-
-Ollama 외에 **Gemini**, **Claude (Vertex AI)**, **3**개 프로바이더를 지원합니다.        
-
-### - 웹 UI 단일 페이지 대시보드
-
-기존 4개 별도 페이지를 **사이드바 기반 단일 페이지**로 통합했습니다.
-
-### **-** 입력 파이프라인 (Phase 3-5)
-
-주제 입력 외에 **URL**, **파일**, **데이터** 소스를 지원합니다.
-
-PlanningAgent와 ResearchAgent가 소스 자료를 자동으로 분석하여 챕터 구성과 내용에 반영합니다.
-
+상세 근거: `docs/evaluation_criteria_research.md`
 
 ---
 
@@ -279,4 +162,4 @@ PlanningAgent와 ResearchAgent가 소스 자료를 자동으로 분석하여 챕
 > **prof-lijar / orchast_agent — book-writer**  
 > [https://github.com/prof-lijar/orchast_agent/tree/master/book-writer](https://github.com/prof-lijar/orchast_agent/tree/master/book-writer)
 
-원본의 핵심 아이디어(Ollama 로컬 LLM + 순차 에이전트 파이프라인 + TOC 기반 챕터 생성)를 참고했으며, 아키텍처 전체는 LangGraph 기반으로 처음부터 새로 구현했습니다.
+원본의 핵심 아이디어(Ollama 로컬 LLM + 순차 에이전트 파이프라인 + TOC 기반 챕터 생성)를 참고했으며, 아키텍처 전체는 LangGraph 기반으로 구현했습니다.
