@@ -1,0 +1,57 @@
+{# Library-style book card grid. Requires: books (list) #}
+{% if books %}
+<div class="library-book-grid">
+    {% for book in books %}
+    <div class="library-book-card">
+        <h2 class="library-book-title">
+            <a href="/reader/{{ book.slug | urlencode }}">{{ book.title }}</a>
+        </h2>
+        <div class="library-book-meta">
+            <span>{{ book.chapters }}개 챕터</span>
+            <span>{{ "{:,}".format(book.words) }} 단어</span>
+            {% if book.score %}<span>품질 {{ "%.1f"|format(book.score) }}</span>{% endif %}
+        </div>
+        {% if book.provider or book.model %}
+        <div class="library-model-row">
+            <span class="library-model-badge">
+                {%- if book.provider and book.model -%}
+                {{ book.provider }} / {{ book.model }}
+                {%- elif book.model -%}
+                {{ book.model }}
+                {%- else -%}
+                {{ book.provider }}
+                {%- endif -%}
+            </span>
+            {% if book.generated_at %}
+            <span class="library-date">{{ book.generated_at[:10] }}</span>
+            {% endif %}
+        </div>
+        {% elif book.generated_at %}
+        <div class="library-model-row">
+            <span class="library-date">{{ book.generated_at[:10] }}</span>
+        </div>
+        {% endif %}
+        <div class="library-score-bar">
+            <div class="library-score-fill" style="width: {{ book.score or 0 }}%; background: {% if (book.score or 0) >= 70 %}#4caf50{% elif (book.score or 0) >= 50 %}#ff9800{% else %}#f44336{% endif %};"></div>
+        </div>
+        {% if book.chapter_list %}
+        <div class="library-chapters">
+            {% for ch in book.chapter_list[:5] %}
+            <a href="/reader/{{ book.slug | urlencode }}/{{ ch.number }}">{{ ch.number }}. {{ ch.title }}</a>
+            {% endfor %}
+            {% if book.chapter_list|length > 5 %}
+            <a href="/reader/{{ book.slug | urlencode }}">... {{ book.chapter_list|length - 5 }}개 더</a>
+            {% endif %}
+        </div>
+        {% endif %}
+        <div class="library-book-actions">
+            <a href="/reader/{{ book.slug | urlencode }}" class="library-btn">읽기</a>
+            <button type="button" class="library-btn library-btn-muted"
+                    onclick="deleteBook('{{ book.slug | urlencode }}', {{ book.title | tojson }})">삭제</button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p class="library-empty">아직 생성된 책이 없습니다.</p>
+{% endif %}

@@ -25,6 +25,168 @@ article header {
     font-size: 1.1rem;
 }
 
+/* ===== Library-style book cards (white tiles on dark dashboard) ===== */
+.library-book-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+    gap: 1.5rem;
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.library-book-card {
+    background: #ffffff;
+    color: #333333;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    transition: transform 0.2s, box-shadow 0.2s;
+    margin: 0;
+    border: none;
+}
+
+.library-book-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.library-book-card .library-book-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1.4;
+    margin: 0 0 0.5rem;
+    padding: 0;
+    border: none;
+}
+
+.library-book-card .library-book-title a {
+    color: #1a1a2e !important;
+    text-decoration: none !important;
+}
+
+.library-book-card .library-book-title a:hover {
+    color: #e94560 !important;
+}
+
+.library-book-meta {
+    font-size: 0.85rem;
+    color: #666666;
+    margin-bottom: 0.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+}
+
+.library-model-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.library-model-badge {
+    display: inline-block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #1a1a2e;
+    background: #eef0f8;
+    border: 1px solid #d5d9e8;
+    border-radius: 999px;
+    padding: 0.2rem 0.65rem;
+    line-height: 1.4;
+}
+
+.library-date {
+    font-size: 0.8rem;
+    color: #888888;
+}
+
+.library-score-bar {
+    height: 6px;
+    background: #e0e0e0;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 0.25rem;
+}
+
+.library-score-fill {
+    height: 100%;
+    border-radius: 3px;
+}
+
+.library-chapters {
+    margin-top: 0.8rem;
+    font-size: 0.85rem;
+}
+
+.library-chapters a {
+    color: #555555 !important;
+    text-decoration: none !important;
+    display: block;
+    padding: 0.2rem 0;
+    line-height: 1.4;
+}
+
+.library-chapters a:hover {
+    color: #e94560 !important;
+}
+
+.library-book-extra {
+    font-size: 0.8rem;
+    color: #888888;
+    margin-top: 0.35rem;
+}
+
+.library-book-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+.library-btn {
+    display: inline-block;
+    padding: 0.35rem 0.9rem;
+    font-size: 0.85rem;
+    border-radius: 6px;
+    border: 1px solid #1a1a2e;
+    background: #1a1a2e;
+    color: #ffffff !important;
+    text-decoration: none !important;
+    cursor: pointer;
+    width: auto;
+    margin: 0;
+}
+
+.library-btn:hover {
+    background: #2d2d4a;
+    border-color: #2d2d4a;
+}
+
+.library-btn-muted {
+    background: transparent;
+    color: #666666 !important;
+    border-color: #cccccc;
+}
+
+.library-btn-muted:hover {
+    background: #f5f5f5;
+    color: #333333 !important;
+}
+
+.library-empty {
+    text-align: center;
+    padding: 3rem;
+    color: var(--pico-muted-color);
+}
+
+/* Pico .grid stretches articles vertically — don't use it for book lists */
+#section-books .grid article,
+.outputs-book-grid article {
+    height: auto;
+}
+
 /* ===== Dashboard sidebar layout ===== */
 .dashboard-layout {
     display: flex;
@@ -66,7 +228,7 @@ article header {
     flex: 1;
     padding: 2rem 2.5rem;
     min-width: 0;
-    max-width: 960px;
+    max-width: 1200px;
 }
 
 @media (max-width: 768px) {

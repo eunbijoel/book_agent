@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Book Agent</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
-    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/style.css?v=5">
 </head>
 <body>
     <div class="dashboard-layout">
@@ -162,32 +162,7 @@
                     <p>{{ books|length }}권</p>
                 </hgroup>
 
-                {% if books %}
-                <div class="grid">
-                    {% for book in books %}
-                    <article>
-                        <header>
-                            <a href="/reader/{{ book.slug }}"><strong>{{ book.title }}</strong></a>
-                        </header>
-                        <p>
-                            {{ book.chapters }}개 챕터 &middot;
-                            {{ "{:,}".format(book.words) }} 단어 &middot;
-                            품질 {{ "%.1f"|format(book.score) }}/100
-                            <br><small>모델: {{ book.provider ~ " / " ~ book.model if book.provider else "미기록" }}</small>
-                        </p>
-                        {% if book.generated_at %}
-                        <small>{{ book.generated_at[:10] }}</small>
-                        {% endif %}
-                        <footer>
-                            <a href="/reader/{{ book.slug }}" role="button" class="outline">읽기</a>
-                            <a href="#" role="button" class="outline secondary" onclick="deleteBook('{{ book.slug }}', '{{ book.title }}')">삭제</a>
-                        </footer>
-                    </article>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <p>아직 생성된 책이 없습니다. 생성 탭에서 만들어 보세요.</p>
-                {% endif %}
+                {% include "_book_cards.html" %}
             </section>
 
             <!-- ===== 작업 현황 섹션 ===== -->

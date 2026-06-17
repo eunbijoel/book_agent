@@ -62,6 +62,20 @@ def _stats_from_chapters(chapter_files: list[Path]) -> tuple[int, float, str]:
     return total_words, avg_score, generated_at
 
 
+def _provider_model(report: dict, chapter_files: list[Path]) -> tuple[str, str]:
+    provider = str(report.get("provider") or "").strip()
+    model = str(report.get("model") or "").strip()
+    if provider or model:
+        return provider, model
+    for path in chapter_files:
+        meta = _read_frontmatter(path)
+        p = str(meta.get("provider") or "").strip()
+        m = str(meta.get("model") or "").strip()
+        if p or m:
+            return p, m
+    return "", ""
+
+
 def _find_book_dirs(root: Path) -> list[Path]:
     """Find directories containing chapter markdown files, at any depth."""
     dirs: list[Path] = []
@@ -108,6 +122,20 @@ def scan_output_books(outputs_dir: Path | None = None) -> list[dict]:
         rel = book_dir.relative_to(root)
         slug = str(rel).replace("\\", "/")
 
+        chapter_list = []
+        for p in chapter_files:
+            match = re.match(r"chapter-(\d+)", p.stem)
+            if not match:
+                continue
+            meta = _read_frontmatter(p)
+            chapter_list.append({
+                "number": int(match.group(1)),
+                "title": meta.get("title") or p.stem.split("-", 2)[-1],
+            })
+        chapter_list.sort(key=lambda c: c["number"])
+
+        provider, model = _provider_model(report, chapter_files)
+
         books.append({
             "slug": slug,
             "title": _infer_title(book_dir, report),
@@ -115,8 +143,9 @@ def scan_output_books(outputs_dir: Path | None = None) -> list[dict]:
             "words": report_words if use_report_stats else words,
             "score": report.get("average_quality_score", score),
             "generated_at": report.get("generated_at", generated_at),
-            "provider": report.get("provider", ""),
-            "model": report.get("model", ""),
+            "provider": provider,
+            "model": model,
+            "chapter_list": chapter_list,
         })
 
     return books
