@@ -58,6 +58,20 @@ class OutputManager:
                 encoding="utf-8",
             )
 
+        if chapter_data.get("quantitative_metrics"):
+            quant_path = self.book_dir / f"chapter-{num:02d}-quantitative.json"
+            quant_path.write_text(
+                json.dumps(chapter_data["quantitative_metrics"], indent=2, ensure_ascii=False),
+                encoding="utf-8",
+            )
+
+        if chapter_data.get("source_evaluation"):
+            src_eval_path = self.book_dir / f"chapter-{num:02d}-source-evaluation.json"
+            src_eval_path.write_text(
+                json.dumps(chapter_data["source_evaluation"], indent=2, ensure_ascii=False),
+                encoding="utf-8",
+            )
+
         return filepath
 
     def load_progress(self) -> dict:
@@ -90,6 +104,13 @@ class OutputManager:
         avg_score = sum(scores) / len(scores) if scores else 0.0
         total_words = sum(ch.get("word_count", 0) for ch in completed)
 
+        faith_scores = [
+            ch.get("source_evaluation", {}).get("scores", {}).get("faithfulness_overall", 0)
+            for ch in completed
+            if ch.get("source_evaluation")
+        ]
+        avg_faithfulness = round(sum(faith_scores) / len(faith_scores), 2) if faith_scores else None
+
         report = {
             "book_title": state.get("title", ""),
             "provider": state.get("provider_name", "") or self.provider_name,
@@ -98,6 +119,7 @@ class OutputManager:
             "total_chapters": len(completed),
             "total_words": total_words,
             "average_quality_score": round(avg_score, 2),
+            "average_source_faithfulness": avg_faithfulness,
             "chapter_scores": [
                 {
                     "number": ch["number"],
@@ -105,6 +127,8 @@ class OutputManager:
                     "score": ch.get("evaluation_score", 0),
                     "word_count": ch.get("word_count", 0),
                     "rewrites": ch.get("rewrite_count", 0),
+                    "faithfulness_score": ch.get("source_evaluation", {}).get("scores", {}).get("faithfulness_overall"),
+                    "faithfulness_verdict": ch.get("source_evaluation", {}).get("verdict"),
                 }
                 for ch in completed
             ],
@@ -191,6 +215,40 @@ class OutputManager:
                 for imp in improvements:
                     eval_lines.append(f"- {imp}")
             eval_lines.append("")
+        # Source faithfulness in evaluation report
+        source_chapters = [ch for ch in completed if ch.get("source_evaluation")]
+        if source_chapters:
+            eval_lines.append("\n## Source Faithfulness\n")
+            eval_lines.append("| Ch | Title | Faithfulness | Verdict |")
+            eval_lines.append("|----|-------|-------------|---------|")
+            for ch in source_chapters:
+                se = ch["source_evaluation"]
+                f_score = se.get("scores", {}).get("faithfulness_overall", "N/A")
+                f_verdict = se.get("verdict", "N/A")
+                eval_lines.append(
+                    f"| {ch['number']} | {ch['title'][:30]} | {f_score} | {f_verdict} |"
+                )
+            eval_lines.append("")
+            for ch in source_chapters:
+                se = ch["source_evaluation"]
+                eval_lines.append(f"\n### Chapter {ch['number']}: Source Analysis\n")
+                claims = se.get("unsupported_claims", [])
+                if claims:
+                    eval_lines.append("**Unsupported Claims:**")
+                    for c in claims:
+                        eval_lines.append(f"- {c}")
+                missing = se.get("missing_key_points", [])
+                if missing:
+                    eval_lines.append("**Missing Key Points:**")
+                    for m in missing:
+                        eval_lines.append(f"- {m}")
+                issues = se.get("accuracy_issues", [])
+                if issues:
+                    eval_lines.append("**Accuracy Issues:**")
+                    for i in issues:
+                        eval_lines.append(f"- {i}")
+                eval_lines.append("")
+
         paths["evaluation_report"] = self.book_dir / "evaluation_report.md"
         paths["evaluation_report"].write_text("\n".join(eval_lines), encoding="utf-8")
 
@@ -225,3 +283,62 @@ class OutputManager:
         for name, path in paths.items():
             logger.info("Saved: %s", path)
         return paths
+
+    def save_human_review_checklist(self, state: dict[str, Any]) -> Path:
+        completed = self._dedupe_completed_chapters(state.get("completed_chapters", []))
+        title = state.get("title", "Untitled")
+        generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+
+        lines = [
+            f"# Human Review Checklist: {title}\n",
+            f"*Generated: {generated_at}*\n",
+            "## Summary\n",
+            "| Ch | Title | Quality | Faithfulness | Issues | Missing |",
+            "|----|-------|---------|-------------|--------|---------|",
+        ]
+
+        for ch in completed:
+            se = ch.get("source_evaluation", {})
+            scores = se.get("scores", {})
+            q_score = ch.get("evaluation_score", 0)
+            f_score = scores.get("faithfulness_overall", "N/A")
+            n_issues = len(se.get("accuracy_issues", []))
+            n_missing = len(se.get("missing_key_points", []))
+            lines.append(
+                f"| {ch['number']} | {ch['title'][:30]} | {q_score:.1f} | {f_score} | {n_issues} | {n_missing} |"
+            )
+
+        lines.append("")
+
+        for ch in completed:
+            se = ch.get("source_evaluation", {})
+            lines.append(f"\n## Chapter {ch['number']}: {ch['title']}\n")
+
+            issues = se.get("accuracy_issues", [])
+            if issues:
+                lines.append("### Accuracy Issues")
+                for item in issues:
+                    lines.append(f"- [ ] {item}")
+                lines.append("")
+
+            claims = se.get("unsupported_claims", [])
+            if claims:
+                lines.append("### Unsupported Claims")
+                for item in claims:
+                    lines.append(f"- [ ] {item}")
+                lines.append("")
+
+            missing = se.get("missing_key_points", [])
+            if missing:
+                lines.append("### Missing Key Points")
+                for item in missing:
+                    lines.append(f"- [ ] {item}")
+                lines.append("")
+
+            if not issues and not claims and not missing:
+                lines.append("No source-related issues detected.\n")
+
+        checklist_path = self.book_dir / "human_review_checklist.md"
+        checklist_path.write_text("\n".join(lines), encoding="utf-8")
+        logger.info("Saved: %s", checklist_path)
+        return checklist_path

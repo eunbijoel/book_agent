@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from pathlib import Path
 from typing import Any
 
@@ -10,7 +11,8 @@ logger = logging.getLogger(__name__)
 
 _MAX_FILE_SIZE = 100 * 1024 * 1024  # 100 MB
 _ENCODINGS = ("utf-8", "cp949", "latin-1")
-_SUPPORTED = {".txt", ".md", ".pdf", ".docx"}
+_SUPPORTED = {".txt", ".md", ".pdf", ".docx", ".html", ".htm"}
+_REMOVE_TAGS = {"script", "style", "nav", "header", "footer", "aside", "noscript", "iframe"}
 
 
 class FileExtractor(BaseExtractor):
@@ -35,6 +37,8 @@ class FileExtractor(BaseExtractor):
             text, title = self._extract_pdf(path)
         elif suffix == ".docx":
             text, title = self._extract_docx(path)
+        elif suffix in (".html", ".htm"):
+            text, title = self._extract_html(path)
         else:
             raise ValueError(f"Unsupported format: {suffix}")
 
@@ -119,6 +123,41 @@ class FileExtractor(BaseExtractor):
         text = "\n\n".join(paragraphs)
         if not title and paragraphs:
             title = paragraphs[0][:100]
+        return text, title
+
+    def _extract_html(self, path: Path) -> tuple[str, str]:
+        from bs4 import BeautifulSoup
+
+        raw = self._read_with_fallback(path)
+        soup = BeautifulSoup(raw, "html.parser")
+
+        title = ""
+        og = soup.find("meta", property="og:title")
+        if og and og.get("content"):
+            title = og["content"].strip()
+        elif soup.find("title") and soup.find("title").string:
+            title = soup.find("title").string.strip()
+        else:
+            h1 = soup.find("h1")
+            if h1:
+                title = h1.get_text(strip=True)
+
+        for tag in soup.find_all(list(_REMOVE_TAGS)):
+            tag.decompose()
+
+        body = None
+        for tag_name in ("article", "main"):
+            body = soup.find(tag_name)
+            if body:
+                break
+        if not body:
+            body = soup.find("body") or soup
+
+        text = body.get_text(separator="\n")
+        text = re.sub(r"\n{3,}", "\n\n", text)
+        text = re.sub(r"[ \t]{2,}", " ", text)
+        text = text.strip()
+
         return text, title
 
     def _read_with_fallback(self, path: Path) -> str:

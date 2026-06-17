@@ -50,6 +50,8 @@ class BookState(TypedDict, total=False):
     evaluation_verdict: str
     needs_rewrite: bool
     rewrite_count: int
+    current_quantitative_metrics: dict[str, Any]
+    current_source_evaluation: dict[str, Any]
 
     # Completed chapters — append explicitly in chapter finalize (not operator.add)
     completed_chapters: list[dict]

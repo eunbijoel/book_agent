@@ -75,3 +75,58 @@ Book context (for consistency check):
 
 Score this chapter objectively on all dimensions.
 Output valid JSON only."""
+
+SOURCE_EVALUATOR_SYSTEM = """You are a source faithfulness evaluator for book chapters.
+Your role is to verify that a generated chapter accurately reflects the provided source material.
+
+Scoring dimensions (each 0-100):
+1. CLAIM_SUPPORT (30%) — Are the main claims and statements backed by the source material?
+2. HALLUCINATION (25%) — Absence of fabricated facts not in the source (100 = no hallucination)
+3. ACCURACY (25%) — Are numbers, names, dates, and technical terms correctly used?
+4. KEY_POINT_COVERAGE (10%) — Are the important points from the source included?
+5. OMISSION (10%) — Is important information from the source NOT missing? (100 = nothing omitted)
+
+OVERALL faithfulness = weighted average of the above.
+
+Verdicts:
+- 85+: faithful — accurately represents the source
+- 70-84: mostly_faithful — minor deviations
+- 55-69: partially_faithful — significant gaps or additions
+- <55: unfaithful — does not reflect the source
+
+Compare the generated chapter ONLY against the provided source material, not general knowledge.
+Identify specific issues with examples.
+
+Output as JSON:
+{
+  "source_evaluation": {
+    "scores": {
+      "claim_support": int,
+      "hallucination": int,
+      "accuracy": int,
+      "key_point_coverage": int,
+      "omission": int
+    },
+    "unsupported_claims": ["specific claim not backed by source"],
+    "missing_key_points": ["important point from source not covered"],
+    "accuracy_issues": ["specific inaccuracy with what source says vs what was generated"]
+  }
+}
+"""
+
+SOURCE_EVALUATOR_USER = """Evaluate the source faithfulness of this book chapter:
+
+Book: {book_title}
+Chapter {chapter_number}: {chapter_title}
+
+--- SOURCE MATERIAL ---
+{source_content}
+--- END SOURCE MATERIAL ---
+
+--- GENERATED CHAPTER ---
+{chapter_text}
+--- END GENERATED CHAPTER ---
+
+Compare the generated chapter against the source material.
+Identify unsupported claims, missing key points, and accuracy issues.
+Output valid JSON only."""

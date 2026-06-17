@@ -255,6 +255,10 @@ def main() -> None:
     output_manager.save_book_report(final_state)
     consolidated = output_manager.save_consolidated_outputs(final_state)
 
+    if final_state.get("source_mode", "topic") != "topic":
+        checklist_path = output_manager.save_human_review_checklist(final_state)
+        logger.info("Human review checklist: %s", checklist_path)
+
     elapsed = time.time() - start_time
     logger.info("Total time: %.1f minutes", elapsed / 60)
 

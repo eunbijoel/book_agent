@@ -93,6 +93,8 @@ def build_chapter_workflow(config: dict[str, Any]) -> Any:
             "rewrite_count": state.get("rewrite_count", 0),
             "summary": _extract_summary(state["current_draft"]),
             "key_terms": state.get("glossary_terms", [])[:10],
+            "quantitative_metrics": state.get("current_quantitative_metrics", {}),
+            "source_evaluation": state.get("current_source_evaluation", {}),
         }
         completed = list(state.get("completed_chapters", []))
         completed.append(completed_entry)
