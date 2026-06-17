@@ -1,7 +1,7 @@
 # Book Writing Agent
 
 여러개의 AI 에이전트 서로 협력해서 책 한 권을 자동으로 써주는 시스템입니다.  
-**LangGraph** + **Ollama** 기반으로 동작하며, 로컬에서 실행됩니다.
+**LangGraph** 기반 Ollama / Gemini / Claude 프로바이더를 지원합니다.
 
 [Library: 생성된 책 모아보기](https://eunbijoel.github.io/book_agent/)
 
@@ -9,30 +9,31 @@
 
 ```
 book_agent/
-├── main.py                  ← CLI 진입점 (기존과 동일하게 사용 가능)
-├── publish_web.py           ← MkDocs 퍼블리셔 (선택)
+├── main.py                  ← CLI 진입점
+├── experiment_runner.py     ← 모델 비교 실험 러너 (comparison.md 생성)
+├── pyproject.toml           ← 패키지·의존성 설정
 │
 ├── agent/                   ← 책 생성 엔진
 │   ├── agents/              ← 6개 AI 에이전트
 │   ├── prompts/             ← 에이전트별 프롬프트
 │   ├── workflows/           ← LangGraph 워크플로 + 상태 + 출력 관리
-│   └── configs/             ← 모델·책 설정 (models.yaml 등)
+│   ├── configs/             ← models.yaml
+│   ├── providers/           ← Ollama / Gemini / Claude / OpenAI
+│   └── inputs/              ← URL·HTML·파일·데이터 소스 추출
 │
 ├── web/                     ← 웹 관리 앱 (FastAPI)
 │   ├── app.py               ← FastAPI 앱
 │   ├── paths.py             ← 공유 경로 상수
-│   ├── routes/              ← TOC, Pipeline, Outputs, Reader 라우트
-│   ├── services/            ← Ollama 연동, 실행기, 도서관 생성, 책 스캔
-│   ├── templates/           ← Jinja2 HTML 템플릿
+│   ├── routes/              ← Dashboard, TOC, Pipeline, Outputs, Reader
+│   ├── services/            ← 프로바이더 실행, 도서관 생성, 책 스캔
+│   ├── templates/           ← Jinja2 HTML 템플릿 (dashboard.html 등)
 │   └── static/              ← CSS, JavaScript
 │
 ├── library/                 ← 정적 도서관 사이트 생성기 (GitHub Pages)
 │   ├── generator.py
 │   └── templates/           ← 도서관 랜딩 + 책 리더 HTML 템플릿
 │
-├── toc/                     ← 목차(TOC) 파일 보관
-│   ├── sample-toc.json
-│   └── tips-kazakhstan.json
+├── docs/ evaluation_criteria_research.md  ← 평가 기준 리서치 (G-Eval 등)
 │
 ├── outputs/                 ← 생성 결과물 (챕터 마크다운, 평가 JSON, 리포트)
 └── tests/
