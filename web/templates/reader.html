@@ -12,6 +12,19 @@
     .chapter-content h1 { font-size: 1.6rem; }
     .chapter-content h2 { font-size: 1.3rem; }
     .chapter-content h3 { font-size: 1.1rem; }
+    .edit-toolbar { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
+    .edit-toolbar .save-status { margin-left: auto; font-size: 0.85rem; color: #666; }
+    .edit-toolbar .save-status.saved { color: #2a7; }
+    .edit-toolbar .save-status.saving { color: #e90; }
+    .edit-toolbar .save-status.error { color: #c33; }
+    #chapter-editor {
+        width: 100%; min-height: 70vh; padding: 1rem;
+        font-family: 'Consolas', 'Monaco', 'Menlo', monospace;
+        font-size: 0.95rem; line-height: 1.6;
+        border: 2px solid #ccc; border-radius: 6px;
+        resize: vertical; tab-size: 4;
+    }
+    #chapter-editor:focus { border-color: #4a9eff; outline: none; }
     @media (max-width: 768px) {
         .reader-layout { flex-direction: column; }
         .chapter-nav { max-width: 100%; position: static; }
@@ -39,7 +52,20 @@
 
     <div class="chapter-content">
         {% if chapter_html %}
-            {{ chapter_html | safe }}
+            <div class="edit-toolbar">
+                <button id="btn-edit" onclick="enterEditMode()">편집</button>
+                <button id="btn-save" onclick="saveChapter()" style="display:none">저장</button>
+                <button id="btn-cancel" onclick="cancelEdit()" style="display:none" class="secondary">취소</button>
+                <span id="save-status" class="save-status"></span>
+            </div>
+
+            <div id="chapter-view">
+                {{ chapter_html | safe }}
+            </div>
+
+            <div id="chapter-edit" style="display:none">
+                <textarea id="chapter-editor">{{ chapter_raw }}</textarea>
+            </div>
 
             <nav style="display:flex; justify-content:space-between; margin-top:2rem;">
                 {% set prev_num = current_chapter.number - 1 %}
@@ -71,4 +97,72 @@
         {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{% if chapter_html %}
+<script>
+const SAVE_URL = '/reader/{{ slug }}/{{ current_chapter.number }}/save';
+let editing = false;
+
+function enterEditMode() {
+    editing = true;
+    document.getElementById('chapter-view').style.display = 'none';
+    document.getElementById('chapter-edit').style.display = 'block';
+    document.getElementById('btn-edit').style.display = 'none';
+    document.getElementById('btn-save').style.display = '';
+    document.getElementById('btn-cancel').style.display = '';
+    document.getElementById('chapter-editor').focus();
+    setStatus('');
+}
+
+function cancelEdit() {
+    editing = false;
+    document.getElementById('chapter-view').style.display = '';
+    document.getElementById('chapter-edit').style.display = 'none';
+    document.getElementById('btn-edit').style.display = '';
+    document.getElementById('btn-save').style.display = 'none';
+    document.getElementById('btn-cancel').style.display = 'none';
+    setStatus('');
+}
+
+async function saveChapter() {
+    const content = document.getElementById('chapter-editor').value;
+    setStatus('saving', '저장 중...');
+    document.getElementById('btn-save').disabled = true;
+    try {
+        const res = await fetch(SAVE_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content }),
+        });
+        const data = await res.json();
+        if (data.ok) {
+            setStatus('saved', '저장 완료');
+            setTimeout(() => location.reload(), 500);
+        } else {
+            setStatus('error', '저장 실패: ' + (data.error || 'unknown'));
+            document.getElementById('btn-save').disabled = false;
+        }
+    } catch (e) {
+        setStatus('error', '저장 실패: ' + e.message);
+        document.getElementById('btn-save').disabled = false;
+    }
+}
+
+function setStatus(cls, text) {
+    const el = document.getElementById('save-status');
+    el.className = 'save-status ' + cls;
+    el.textContent = text || '';
+}
+
+document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        if (editing) saveChapter();
+        else enterEditMode();
+    }
+});
+</script>
+{% endif %}
 {% endblock %}

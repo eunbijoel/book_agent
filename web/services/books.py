@@ -7,25 +7,11 @@ from pathlib import Path
 import yaml
 
 from web.paths import OUTPUTS_DIR
-FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
-
-
-def _list_chapter_files(book_dir: Path) -> list[Path]:
-    return sorted(
-        p for p in book_dir.glob("chapter-*.md")
-        if "evaluation" not in p.name
-    )
-
-
-def _read_frontmatter(path: Path) -> dict:
-    text = path.read_text(encoding="utf-8")
-    match = FRONTMATTER_RE.match(text)
-    if not match:
-        return {}
-    try:
-        return yaml.safe_load(match.group(1)) or {}
-    except yaml.YAMLError:
-        return {}
+from web.services.chapters import (
+    chapter_title,
+    list_chapter_files,
+    read_frontmatter,
+)
 
 
 def _infer_title(book_dir: Path, report: dict | None) -> str:
@@ -50,7 +36,7 @@ def _stats_from_chapters(chapter_files: list[Path]) -> tuple[int, float, str]:
     generated_at = ""
 
     for path in chapter_files:
-        meta = _read_frontmatter(path)
+        meta = read_frontmatter(path)
         total_words += int(meta.get("word_count", 0) or 0)
         if meta.get("quality_score") is not None:
             scores.append(float(meta["quality_score"]))
@@ -68,7 +54,7 @@ def _provider_model(report: dict, chapter_files: list[Path]) -> tuple[str, str]:
     if provider or model:
         return provider, model
     for path in chapter_files:
-        meta = _read_frontmatter(path)
+        meta = read_frontmatter(path)
         p = str(meta.get("provider") or "").strip()
         m = str(meta.get("model") or "").strip()
         if p or m:
@@ -94,7 +80,7 @@ def scan_output_books(outputs_dir: Path | None = None) -> list[dict]:
 
     books: list[dict] = []
     for book_dir in _find_book_dirs(root):
-        chapter_files = _list_chapter_files(book_dir)
+        chapter_files = list_chapter_files(book_dir)
         if not chapter_files:
             continue
 
@@ -127,10 +113,9 @@ def scan_output_books(outputs_dir: Path | None = None) -> list[dict]:
             match = re.match(r"chapter-(\d+)", p.stem)
             if not match:
                 continue
-            meta = _read_frontmatter(p)
             chapter_list.append({
                 "number": int(match.group(1)),
-                "title": meta.get("title") or p.stem.split("-", 2)[-1],
+                "title": chapter_title(p),
             })
         chapter_list.sort(key=lambda c: c["number"])
 
